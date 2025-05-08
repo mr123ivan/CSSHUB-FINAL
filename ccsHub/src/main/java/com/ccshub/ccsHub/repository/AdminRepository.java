@@ -2,7 +2,6 @@ package com.ccshub.ccsHub.repository;
 
 import com.ccshub.ccsHub.entity.Admin;
 import com.ccshub.ccsHub.entity.User;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -30,7 +29,7 @@ public class AdminRepository {
             admin.setAdminId(rows.getInt("admin_id"));
             admin.setUsername(rows.getString("username"));
             admin.setRole(rows.getString("role"));
-            admin.setPassword(rows.getString("password")); // Missing in getAllAdmins
+            admin.setPassword(rows.getString("password"));
 
             int userId = rows.getInt("user_id");
             User user = userRepository.getUserById(userId);
@@ -38,7 +37,6 @@ public class AdminRepository {
 
             admins.add(admin);
         }
-
         return admins;
     }
 
@@ -51,7 +49,7 @@ public class AdminRepository {
             admin.setAdminId(row.getInt("admin_id"));
             admin.setUsername(row.getString("username"));
             admin.setRole(row.getString("role"));
-            admin.setPassword(row.getString("password")); // Missing in getAdminById
+            admin.setPassword(row.getString("password"));
 
             int userId = row.getInt("user_id");
             User user = userRepository.getUserById(userId);
@@ -59,29 +57,42 @@ public class AdminRepository {
 
             return admin;
         }
+        return null;
+    }
 
+    public Admin findByUserId(int userId) {
+        String sql = "SELECT * FROM admin WHERE user_id = ?";
+        SqlRowSet row = jdbcTemplate.queryForRowSet(sql, userId);
+
+        if (row.next()) {
+            Admin admin = new Admin();
+            admin.setAdminId(row.getInt("admin_id"));
+            admin.setUsername(row.getString("username"));
+            admin.setRole(row.getString("role"));
+            admin.setPassword(row.getString("password"));
+
+            User user = userRepository.getUserById(userId);
+            admin.setUserId(user);
+
+            return admin;
+        }
         return null;
     }
 
     public Admin createAdmin(Admin admin) {
-        String sql = "INSERT INTO admin (username, user_id, role, password) VALUES (?, ?, ?, ?)";
-        jdbcTemplate.update(
-                sql,
+        String sql = "INSERT INTO admin (username, user_id, role, password) VALUES (?, ?, ?, ?) RETURNING admin_id";
+        Integer id = jdbcTemplate.queryForObject(sql, Integer.class,
                 admin.getUsername(),
                 admin.getUserId().getUserId(),
                 admin.getRole(),
                 admin.getPassword());
 
-        String getIdSql = "SELECT admin_id FROM admin ORDER BY admin_id LIMIT 1";
-        Integer id = jdbcTemplate.queryForObject(getIdSql, Integer.class);
-
         return id != null ? getAdminById(id) : null;
     }
 
     public Admin updateAdmin(Admin admin) {
-        String sql = "UPDATE admin SET username = ?, user_id = ?, role = ?,  password = ? WHERE admin_id = ?";
-        jdbcTemplate.update(
-                sql,
+        String sql = "UPDATE admin SET username = ?, user_id = ?, role = ?, password = ? WHERE admin_id = ?";
+        jdbcTemplate.update(sql,
                 admin.getUsername(),
                 admin.getUserId().getUserId(),
                 admin.getRole(),
