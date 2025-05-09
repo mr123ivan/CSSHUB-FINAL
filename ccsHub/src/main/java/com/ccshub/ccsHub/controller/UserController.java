@@ -1,11 +1,13 @@
 package com.ccshub.ccsHub.controller;
 
+import com.ccshub.ccsHub.entity.Admin;
 import com.ccshub.ccsHub.entity.User;
-import com.ccshub.ccsHub.entity.UserDto;
 import com.ccshub.ccsHub.repository.UserRepository;
+import com.ccshub.ccsHub.repository.AdminRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,20 +17,23 @@ import java.util.List;
 public class UserController {
 
     @Autowired
-    private UserRepository repo;
+    private UserRepository userRepo;
+
+    @Autowired
+    private AdminRepository adminRepo;
 
     @PostMapping("/sync")
-    public ResponseEntity<User> syncAzureUser(@RequestBody OidcUser oidcUser) {
-        String username = oidcUser.getFullName();
-        String email = oidcUser.getEmail();
+    public ResponseEntity<User> syncAzureUser(@AuthenticationPrincipal Jwt jwt) {
+        String email = jwt.getClaimAsString("preferred_username");
+        String username = jwt.getClaimAsString("given_name") + " " + jwt.getClaimAsString("family_name");
 
-        User user = repo.findByEmail(email);
+        User user = userRepo.findByEmail(email);
         if (user == null) {
             user = new User();
             user.setUsername(username);
             user.setEmail(email);
             user.setPassword("N/A");
-            repo.createUser(user);
+            user = userRepo.createUser(user);
         }
 
         return ResponseEntity.ok(user);
@@ -37,26 +42,33 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<User>> listUsers(@RequestParam(required = false) String keyword) {
         List<User> users = (keyword == null || keyword.isBlank())
-                ? repo.getAllUsers()
-                : repo.searchByUsername(keyword);
+                ? userRepo.getAllUsers()
+                : userRepo.searchByUsername(keyword);
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable int id) {
-        User user = repo.getUserById(id);
+        User user = userRepo.getUserById(id);
         return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable int id) {
-        User user = repo.getUserById(id);
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable int id, @AuthenticationPrincipal Jwt jwt) {
+        User user = userRepo.getUserById(id);
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
 
-        repo.deleteUser(id);
+        String email = jwt.getClaimAsString("preferred_username");
+        User currentUser = userRepo.findByEmail(email);
+        Admin admin = adminRepo.findByUserId(currentUser.getUserId());
+
+        if (admin == null || !"ADMIN".equals(admin.getRole())) {
+            return ResponseEntity.status(403).build();
+        }
+
+        userRepo.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
-
 }

@@ -3,6 +3,7 @@ package com.ccshub.ccsHub.config;
 import com.ccshub.ccsHub.entity.User;
 import com.ccshub.ccsHub.repository.UserRepository;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -23,17 +24,18 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
-            HttpServletResponse response,
-            Authentication authentication)
+                                        HttpServletResponse response,
+                                        Authentication authentication)
             throws IOException, ServletException {
 
-        OidcUser oidcUser = (OidcUser) authentication.getPrincipal();
+        OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
+        OidcUser oidcUser = (OidcUser) oauthToken.getPrincipal();
 
-        String username = oidcUser.getFullName();
+        String username = oidcUser.getGivenName() + " " + oidcUser.getFamilyName();
         String email = oidcUser.getEmail();
+        String accessToken = oauthToken.getCredentials().toString(); // Extract JWT access token
 
         User user = userRepository.findByEmail(email);
-
         if (user == null) {
             user = new User();
             user.setUsername(username);
@@ -42,7 +44,10 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             userRepository.createUser(user);
         }
 
-        // ✅ After syncing, redirect to React userpage
-        response.sendRedirect("http://localhost:5173/userpage");// change this
+        // Redirect to React userpage with JWT
+        String redirectUrl = (request.getServerName().contains("localhost"))
+                ? "http://localhost:5173/userpage?token=" + accessToken
+                : "https://csshub-systeminteg.vercel.app/userpage?token=" + accessToken;
+        response.sendRedirect(redirectUrl);
     }
 }

@@ -9,10 +9,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 @Component
 public class CustomLogoutHandler extends SecurityContextLogoutHandler {
 
+    private static final Logger LOGGER = Logger.getLogger(CustomLogoutHandler.class.getName());
     private final ClientRegistrationRepository clientRegistrationRepository;
 
     public CustomLogoutHandler(ClientRegistrationRepository clientRegistrationRepository) {
@@ -20,26 +22,30 @@ public class CustomLogoutHandler extends SecurityContextLogoutHandler {
     }
 
     @Override
-    public void logout(HttpServletRequest request,
-                       HttpServletResponse response,
-                       Authentication authentication) {
+    public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         super.logout(request, response, authentication);
 
-        String logoutendPoint = (String)  clientRegistrationRepository
+        String logoutEndpoint = (String) clientRegistrationRepository
                 .findByRegistrationId("azure-dev")
                 .getProviderDetails()
                 .getConfigurationMetadata()
                 .get("end_session_endpoint");
 
+        String postLogoutRedirectUri = request.getServerName().contains("localhost")
+                ? "http://localhost:5173"
+                : "https://csshub-systeminteg.vercel.app";
+
         String logoutUri = UriComponentsBuilder
-                .fromHttpUrl(logoutendPoint)
+                .fromHttpUrl(logoutEndpoint)
+                .queryParam("post_logout_redirect_uri", postLogoutRedirectUri)
                 .encode()
                 .toUriString();
 
         try {
             response.sendRedirect(logoutUri);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            LOGGER.severe("Failed to redirect to Azure AD logout endpoint: " + e.getMessage());
+            throw new RuntimeException("Logout redirect failed", e);
         }
     }
 }

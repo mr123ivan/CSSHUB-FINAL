@@ -5,14 +5,13 @@ spring:
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?user=postgres.vjcyyzpskoqhdkqklttm&password=ccsHub_Systemintegration123
-
     hikari:
-      maximum-pool-size: 3 # Reduced from 5 to avoid hitting limits
-      minimum-idle: 1 # Reduced from 2 to minimize connections when idle
-      idle-timeout: 30000 # Keep this (30 seconds)
-      connection-timeout: 20000 # Slightly reduced (20 seconds)
-      max-lifetime: 1200000 # Reduced to 20 minutes instead of 30
-      leak-detection-threshold: 60000 # Added to detect potential connection leaks
+      maximum-pool-size: 3
+      minimum-idle: 1
+      idle-timeout: 30000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+      leak-detection-threshold: 60000
 
   jpa:
     show-sql: true
@@ -35,11 +34,13 @@ spring:
               - openid
               - email
               - profile
+              - api://67761468-57d5-41a3-9b4f-1f69101be135/user_impersonation
+      resourceserver:
+        jwt:
+          issuer-uri: "https://login.microsoftonline.com/823cde44-4433-456d-b801-bdf0ab3d41fc/v2.0"
+          jwk-set-uri: "https://login.microsoftonline.com/823cde44-4433-456d-b801-bdf0ab3d41fc/discovery/v2.0/keys"
 
 server:
-  # port: 80
-  # address: 0.0.0.0
-
   port: 8080
   address: localhost
   error:
