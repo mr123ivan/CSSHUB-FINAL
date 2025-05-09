@@ -79,6 +79,10 @@ public class UserRepository {
         String sql = "INSERT INTO users (username, email, password) VALUES (?, ?, ?) RETURNING user_id";
         Integer id = jdbcTemplate.queryForObject(sql, Integer.class, user.getUsername(), user.getEmail(),
                 user.getPassword());
+                if (user.getEmail() == null || user.getUsername() == null) {
+                    throw new IllegalArgumentException("Missing required fields for user creation.");
+                }
+            
         return getUserById(id);
     }
 

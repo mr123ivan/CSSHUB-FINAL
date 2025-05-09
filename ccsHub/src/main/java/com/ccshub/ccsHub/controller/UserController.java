@@ -25,6 +25,10 @@ public class UserController {
     @PostMapping("/sync")
     public ResponseEntity<User> syncAzureUser(@AuthenticationPrincipal Jwt jwt) {
         String email = jwt.getClaimAsString("preferred_username");
+        if (email == null) {
+            email = jwt.getClaimAsString("email"); // fallback
+        }
+
         String username = jwt.getClaimAsString("given_name") + " " + jwt.getClaimAsString("family_name");
 
         User user = userRepo.findByEmail(email);

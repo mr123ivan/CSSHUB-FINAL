@@ -25,11 +25,14 @@ spring:
           azure:
             issuer-uri: "https://login.microsoftonline.com/823cde44-4433-456d-b801-bdf0ab3d41fc/v2.0"
             user-name-attribute: name
+            token-uri: "https://login.microsoftonline.com/823cde44-4433-456d-b801-bdf0ab3d41fc/oauth2/v2.0/token"
         registration:
           azure-dev:
             provider: azure
             client-id: 67761468-57d5-41a3-9b4f-1f69101be135
             client-secret: JDb8Q~9YR51YTnNtJNDz6Y3nhX2CIHHnyjmqdbvf
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:8080/login/oauth2/code/azure-dev"
             scope:
               - openid
               - email
@@ -39,6 +42,8 @@ spring:
         jwt:
           issuer-uri: "https://login.microsoftonline.com/823cde44-4433-456d-b801-bdf0ab3d41fc/v2.0"
           jwk-set-uri: "https://login.microsoftonline.com/823cde44-4433-456d-b801-bdf0ab3d41fc/discovery/v2.0/keys"
+          audiences:
+            - "api://67761468-57d5-41a3-9b4f-1f69101be135"
 
 server:
   port: 8080

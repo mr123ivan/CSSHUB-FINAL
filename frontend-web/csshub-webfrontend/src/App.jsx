@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './pages/ProtectedRoute';
 import AdminProtectedRoute from './Admin/AdminProtectedRoute';
 import Login from './pages/Login';
@@ -20,44 +20,14 @@ import AdminOrders from './Admin/AdminOrders';
 import AdminAddEvent from './Admin/AdminAddEvent';
 import AdminAddMerch from './Admin/AdminAddMerch';
 import { AuthProvider } from './pages/AuthProvider';
-import { useEffect } from 'react';
+import TokenExtractor from './components/TokenExtractor';
+import LogoutButton from './components/LogoutButton';
 
-// LogoutButton Component (integrated here for simplicity)
-const LogoutButton = () => {
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.removeItem('access_token'); // Clear JWT
-    navigate('/'); // Redirect to landing page after logout
-    window.location.href = process.env.NODE_ENV === 'development'
-      ? 'http://localhost:8080/logout'
-      : 'https://ccshub-systeminteg.azurewebsites.net/logout'; // Trigger server-side logout
-  };
-
-  return (
-    <button onClick={handleLogout} className="btn btn-primary">
-      Logout
-    </button>
-  );
-};
-
-// Main App Component
 function App() {
-  // Extract JWT from URL and store in localStorage
-  const location = useLocation();
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const token = params.get('token');
-    if (token) {
-      localStorage.setItem('access_token', token);
-      // Optionally redirect to remove token from URL
-      window.history.replaceState({}, document.title, location.pathname);
-    }
-  }, [location]);
-
   return (
     <AuthProvider>
       <BrowserRouter>
+        <TokenExtractor />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />

@@ -1,21 +1,58 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: process.env.NODE_ENV === 'development'
-      ? 'http://localhost:8080/api'
-      : 'https://ccshub-systeminteg.azurewebsites.net/api',
-    withCredentials: true,
-  });
+  baseURL: 'http://localhost:8080',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add a function to decode JWT token for debugging
+const decodeJwt = (token) => {
+  try {
+    return JSON.parse(atob(token.split('.')[1]));
+  } catch (error) {
+    console.error('Error decoding JWT token:', error);
+    return null;
+  }
+};
 
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
     if (token) {
+      // Log token validity info for debugging
+      const decoded = decodeJwt(token);
+      if (decoded) {
+        const currentTime = Math.floor(Date.now() / 1000);
+        console.log('Token valid:', decoded.exp > currentTime, 
+                    'Expires:', new Date(decoded.exp * 1000).toLocaleString());
+      }
+      
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      console.error('Unauthorized request, consider logging out:', error);
+      
+      // Provide more detailed debugging info
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        const decoded = decodeJwt(token);
+        console.log('Current token payload:', decoded);
+      } else {
+        console.log('No access token found in localStorage');
+      }
+    }
+    return Promise.reject(error);
+  }
 );
 
 export default api;

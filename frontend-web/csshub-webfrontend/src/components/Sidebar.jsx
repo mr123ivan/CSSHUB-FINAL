@@ -7,7 +7,7 @@ const Sidebar = ({ userName = 'User' }) => {
       <div>
         <div className="flex items-center mb-6">
           <img
-            src="https://via.placeholder.com/50"
+            src="https://placehold.co/50x50/333/yellow?text=User"
             alt="User Profile"
             className="w-12 h-12 rounded-full mr-4"
           />
