@@ -8,21 +8,21 @@ const AdminSidebar = () => {
   
   // Helper function to determine if a link is active
   const isActive = (path) => {
-    return currentPath === path ? 'bg-yellow-500 text-black font-bold' : 'hover:bg-yellow-100';
+    return currentPath === path ? 'bg-yellow-400 text-gray-800 font-bold' : 'hover:bg-gray-700';
   };
 
   return (
-    <aside className="w-64 bg-black text-yellow-500 h-screen flex flex-col">
-      <div className="p-6 border-b border-yellow-500/30">
+    <aside className="w-64 bg-gray-800 text-yellow-400 h-screen flex flex-col">
+      <div className="p-6 border-b border-yellow-400/20">
         <h1 className="text-xl font-bold flex items-center justify-center mb-2">CSS-HUB</h1>
-        <p className="text-xs text-center text-yellow-500/70">Admin Dashboard</p>
+        <p className="text-xs text-center text-yellow-400/80">Admin Dashboard</p>
       </div>
       
       <div className="flex-1 overflow-y-auto p-4">
         <nav className="space-y-6">
           {/* Overview Section */}
           <div>
-            <h2 className="text-xs uppercase tracking-wider mb-3 text-yellow-500/70 font-semibold">Dashboard</h2>
+            <h2 className="text-xs uppercase tracking-wider mb-3 text-yellow-400/80 font-semibold">Dashboard</h2>
             <ul className="space-y-1">
               <li>
                 <Link 
@@ -38,7 +38,7 @@ const AdminSidebar = () => {
 
           {/* Members Section */}
           <div>
-            <h2 className="text-xs uppercase tracking-wider mb-3 text-yellow-500/70 font-semibold">Members</h2>
+            <h2 className="text-xs uppercase tracking-wider mb-3 text-yellow-400/80 font-semibold">Members</h2>
             <ul className="space-y-1">
               <li>
                 <Link 
@@ -54,7 +54,7 @@ const AdminSidebar = () => {
 
           {/* Events Section */}
           <div>
-            <h2 className="text-xs uppercase tracking-wider mb-3 text-yellow-500/70 font-semibold">Events</h2>
+            <h2 className="text-xs uppercase tracking-wider mb-3 text-yellow-400/80 font-semibold">Events</h2>
             <ul className="space-y-1">
               <li>
                 <Link 
@@ -70,7 +70,7 @@ const AdminSidebar = () => {
 
           {/* Merchandise Section */}
           <div>
-            <h2 className="text-xs uppercase tracking-wider mb-3 text-yellow-500/70 font-semibold">Merchandise</h2>
+            <h2 className="text-xs uppercase tracking-wider mb-3 text-yellow-400/80 font-semibold">Merchandise</h2>
             <ul className="space-y-1">
               <li>
                 <Link 
@@ -86,7 +86,7 @@ const AdminSidebar = () => {
           
           {/* Orders Section */}
           <div>
-            <h2 className="text-xs uppercase tracking-wider mb-3 text-yellow-500/70 font-semibold">Orders</h2>
+            <h2 className="text-xs uppercase tracking-wider mb-3 text-yellow-400/80 font-semibold">Orders</h2>
             <ul className="space-y-1">
               <li>
                 <Link 
@@ -102,7 +102,7 @@ const AdminSidebar = () => {
         </nav>
       </div>
       
-      <div className="p-4 border-t border-yellow-500/30 text-xs text-center">
+      <div className="p-4 border-t border-yellow-400/20 text-xs text-center">
         © {new Date().getFullYear()} CSS-HUB
       </div>
     </aside>
