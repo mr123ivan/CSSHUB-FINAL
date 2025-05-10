@@ -45,6 +45,13 @@ spring:
           audiences:
             - "api://67761468-57d5-41a3-9b4f-1f69101be135"
 
+
+
+# JWT Configuration for local user authentication
+jwt:
+  secret: "!ePaZ2J3NDG?0Ta94-lPN3u?6BiLgsJfJ7pV7mXbMRWK6o2-kufTvP!tsNaCyZBa"
+  expiration: 86400000  # 24 hours in milliseconds
+
 server:
   port: 8080
   address: localhost

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
+import { useAuth } from './AuthProvider';
 import axios from 'axios';
 
 // Set up axios with base URL and CORS credentials
@@ -17,6 +18,7 @@ const Invoice = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { instance } = useMsal();
+  const { user, isAuthenticated } = useAuth();
   const activeAccount = instance.getActiveAccount();
   
   const [orderCreated, setOrderCreated] = useState(false);
@@ -49,10 +51,37 @@ const Invoice = () => {
       setIsProcessing(true);
       setError(null);
       
-      // Get the user ID from the Microsoft account
-      // In a real app, you would look up the user by their email
-      // For now, we'll use a placeholder user ID
-      const userId = 1; // Replace with actual user lookup logic
+      // Get the actual user ID from authentication context
+      let userId;
+      
+      // First try to get user ID from auth context
+      if (isAuthenticated && user && user.userId) {
+        userId = user.userId;
+      } else {
+        // Fall back to localStorage if context doesn't have user info
+        const userData = localStorage.getItem('user_data');
+        if (userData) {
+          try {
+            const parsedUser = JSON.parse(userData);
+            userId = parsedUser.userId || parsedUser.user_id;
+          } catch (err) {
+            console.error('Error parsing user data from localStorage:', err);
+          }
+        }
+      }
+      
+      // If we still don't have a user ID, redirect to login
+      if (!userId) {
+        console.error('No user ID found, redirecting to login');
+        setError('Please log in to complete your order.');
+        setIsProcessing(false);
+        setTimeout(() => {
+          navigate('/login');
+        }, 2000);
+        return;
+      }
+      
+      console.log('Using user ID for order:', userId);
       
       console.log('Creating order with item:', item);
       

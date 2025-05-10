@@ -19,17 +19,29 @@ const decodeJwt = (token) => {
 
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      // Log token validity info for debugging
-      const decoded = decodeJwt(token);
-      if (decoded) {
-        const currentTime = Math.floor(Date.now() / 1000);
-        console.log('Token valid:', decoded.exp > currentTime, 
-                    'Expires:', new Date(decoded.exp * 1000).toLocaleString());
-      }
+    // Don't add auth header for public endpoints
+    const isPublicEndpoint = 
+      config.url.includes('/api/auth/login') || 
+      config.url.includes('/api/auth/register') ||
+      config.url.includes('/api/events') ||
+      config.url.includes('/api/merchandises') ||
+      config.url.includes('/api/orders/create') ||
+      config.url.includes('/api/orders/payment') ||
+      config.url.includes('/api/payments');
       
-      config.headers.Authorization = `Bearer ${token}`;
+    if (!isPublicEndpoint) {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        // Log token validity info for debugging
+        const decoded = decodeJwt(token);
+        if (decoded) {
+          const currentTime = Math.floor(Date.now() / 1000);
+          console.log('Token valid:', decoded.exp > currentTime, 
+                      'Expires:', new Date(decoded.exp * 1000).toLocaleString());
+        }
+        
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },

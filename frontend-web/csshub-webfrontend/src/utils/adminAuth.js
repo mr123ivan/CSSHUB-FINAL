@@ -159,6 +159,9 @@ export const addMerchandise = async (merchandiseData) => {
  * @returns {Object} Config object for axios
  */
 export const getAuthConfig = () => {
-  // No headers needed since we're using a different approach
-  return {};
+  // No headers needed for admin operations per user requirements
+  // The backend has been configured to permit all admin operations
+  return {
+    withCredentials: true
+  };
 };

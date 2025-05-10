@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getAuthConfig, logoutAdmin } from '../utils/adminAuth';
-
 import AdminSidebar from '../components/AdminSidebar';
 import AdminHeader from '../components/AdminHeader';
 import AdminActionButtons from '../components/AdminActionButtons';
@@ -33,17 +32,14 @@ const AdminOrders = () => {
   const applyFilters = () => {
     let result = [...orders];
     
-    // Apply payment status filter
     if (filterPaymentStatus !== 'All') {
       result = result.filter(order => order.paymentStatus === filterPaymentStatus);
     }
     
-    // Apply order status filter
     if (filterOrderStatus !== 'All') {
       result = result.filter(order => order.orderStatus === filterOrderStatus);
     }
     
-    // Apply search term filter
     if (searchTerm) {
       const lowercasedSearch = searchTerm.toLowerCase();
       result = result.filter(order => 
@@ -51,7 +47,8 @@ const AdminOrders = () => {
         (order.user?.username?.toLowerCase().includes(lowercasedSearch)) ||
         (order.user?.email?.toLowerCase().includes(lowercasedSearch)) ||
         (order.merchandise?.name?.toLowerCase().includes(lowercasedSearch)) ||
-        (order.event?.name?.toLowerCase().includes(lowercasedSearch))
+        (order.event?.name?.toLowerCase().includes(lowercasedSearch)) ||
+        (order.event?.title?.toLowerCase().includes(lowercasedSearch))
       );
     }
     
@@ -70,11 +67,9 @@ const AdminOrders = () => {
     setError(null);
     
     try {
-      // Use auth config from utility
       const response = await axios.get('http://localhost:8080/api/orders', getAuthConfig());
       
       if (response.data && response.data.length > 0) {
-        // Map backend data structure to match our component's expected format
         const formattedOrders = response.data.map(order => ({
           id: order.id || order.orderId,
           orderId: order.orderId || order.id,
@@ -97,13 +92,13 @@ const AdminOrders = () => {
       }
     } catch (err) {
       console.error('Error fetching orders:', err);
-      
-      // Check if it's an authentication error
-      if (err.response && err.response.status === 401 || 
-          err.message.includes('Network Error') && err.config.url.includes('login.microsoftonline.com')) {
-        setError('Cannot access orders: Authentication required. Demo mode enabled for UI testing.');
-        
-        // Provide some sample data for UI testing
+      if (err.response && err.response.status === 401) {
+        setError('Authentication required. Please log in.');
+        logoutAdmin();
+        navigate('/adminlogin');
+      } else {
+        setError('Cannot access orders: Failed to load orders from server. Demo mode enabled for UI testing.');
+        // Provide sample data for UI testing
         const sampleOrders = [
           {
             id: 1,
@@ -148,9 +143,6 @@ const AdminOrders = () => {
         
         setOrders(sampleOrders);
         setFilteredOrders(sampleOrders);
-      } else {
-        setError('Failed to load orders from server: ' + err.message);
-        setOrders([]);
       }
     } finally {
       setLoading(false);
@@ -159,26 +151,25 @@ const AdminOrders = () => {
 
   const handleUpdateStatus = async (orderId, status) => {
     try {
-      // Create the update data
-      const updateData = {
-        orderStatus: status
-      };
-      
+      const updateData = { orderStatus: status };
       try {
-        // Use auth config from utility
         await axios.put(`http://localhost:8080/api/orders/edit/${orderId}`, updateData, getAuthConfig());
         alert('Order status updated successfully on server');
       } catch (apiError) {
         console.error('Server update failed, updating UI only:', apiError);
+        if (apiError.response && apiError.response.status === 401) {
+          setError('Authentication required. Please log in.');
+          logoutAdmin();
+          navigate('/adminlogin');
+          return;
+        }
         alert('Backend server requires authentication. Status updated in UI only.');
       }
       
-      // Always update the UI even if the server request failed
       setOrders(orders.map(order => 
         order.orderId == orderId ? { ...order, orderStatus: status } : order
       ));
       
-      // Try to refresh orders but don't throw error if it fails
       try {
         fetchOrders();
       } catch (refreshError) {
@@ -192,26 +183,25 @@ const AdminOrders = () => {
 
   const handleUpdatePayment = async (orderId, status) => {
     try {
-      // Create the update data
-      const updateData = {
-        paymentStatus: status
-      };
-      
+      const updateData = { paymentStatus: status };
       try {
-        // Use auth config from utility
         await axios.put(`http://localhost:8080/api/orders/edit/${orderId}`, updateData, getAuthConfig());
         alert('Payment status updated successfully on server');
       } catch (apiError) {
         console.error('Server update failed, updating UI only:', apiError);
+        if (apiError.response && apiError.response.status === 401) {
+          setError('Authentication required. Please log in.');
+          logoutAdmin();
+          navigate('/adminlogin');
+          return;
+        }
         alert('Backend server requires authentication. Status updated in UI only.');
       }
       
-      // Always update the UI even if the server request failed
       setOrders(orders.map(order => 
         order.orderId == orderId ? { ...order, paymentStatus: status } : order
       ));
       
-      // Try to refresh orders but don't throw error if it fails
       try {
         fetchOrders();
       } catch (refreshError) {
@@ -228,18 +218,15 @@ const AdminOrders = () => {
     setShowReceiptModal(true);
   };
 
-  // Function to get receipt image URL or fallback
   const getReceiptImageUrl = (order) => {
     if (!order || !order.receiptImage) {
       return 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22600%22%20height%3D%22400%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20fill%3D%22%23333%22%20width%3D%22600%22%20height%3D%22400%22%2F%3E%3Ctext%20fill%3D%22%23FFCC00%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2236%22%20text-anchor%3D%22middle%22%20x%3D%22300%22%20y%3D%22200%22%3ENo%20Receipt%3C%2Ftext%3E%3C%2Fsvg%3E';
     }
     
-    // For sample data or demo mode
     if (order.receiptImage === 'sample-receipt') {
       return 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22600%22%20height%3D%22800%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20fill%3D%22%23f8f9fa%22%20width%3D%22600%22%20height%3D%22800%22%2F%3E%3Ctext%20fill%3D%22%23212529%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2236%22%20text-anchor%3D%22middle%22%20x%3D%22300%22%20y%3D%22100%22%3EReceipt%3C%2Ftext%3E%3Ctext%20fill%3D%22%23212529%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2224%22%20text-anchor%3D%22middle%22%20x%3D%22300%22%20y%3D%22200%22%3EOrder%20%23%3A%20' + order.orderId + '%3C%2Ftext%3E%3Ctext%20fill%3D%22%23212529%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2224%22%20text-anchor%3D%22middle%22%20x%3D%22300%22%20y%3D%22250%22%3EAmount%3A%20%E2%82%B1' + order.totalAmount + '%3C%2Ftext%3E%3Ctext%20fill%3D%22%23198754%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2230%22%20text-anchor%3D%22middle%22%20x%3D%22300%22%20y%3D%22350%22%3EPAID%3C%2Ftext%3E%3C%2Fsvg%3E';
     }
     
-    // Return the receipt image URL with credentials
     return `http://localhost:8080/api/orders/receipt-image/${order.orderId}?time=${new Date().getTime()}`;
   };
 
@@ -317,8 +304,12 @@ const AdminOrders = () => {
               </p>
               {error.includes('Authentication') && (
                 <p className="mt-2 text-sm text-yellow-300">
-                  <strong>Note:</strong> You are viewing the admin interface in demo mode. 
-                  All actions will update the UI but won't be saved to the database until you log in.
+                  <button 
+                    onClick={() => navigate('/adminlogin')} 
+                    className="underline hover:text-yellow-200"
+                  >
+                    Go to Login
+                  </button>
                 </p>
               )}
             </div>
@@ -427,12 +418,12 @@ const AdminOrders = () => {
               </div>
               
               {/* Authentication note for admin */}
-              {error && (error.includes('Authentication') || error.includes('auth')) && (
+              {error && error.includes('Authentication') && (
                 <div className="mt-2 p-2 bg-yellow-900/30 border border-yellow-700 rounded text-sm text-yellow-400">
                   <p className="flex items-center">
                     <span className="mr-2">ℹ️</span>
                     <span>
-                      <strong>Note for Admin:</strong> You can sign in using your Microsoft Azure account to enable database updates.
+                      <strong>Note for Admin:</strong> Please sign in to enable database updates.
                       <button 
                         onClick={() => navigate('/adminlogin')} 
                         className="ml-2 underline hover:text-yellow-300"

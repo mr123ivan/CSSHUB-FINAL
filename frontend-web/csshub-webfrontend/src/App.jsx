@@ -17,6 +17,7 @@ import AdminMembers from './Admin/AdminMembers';
 import AdminUpcomingEvents from './Admin/AdminUpcomingEvents';
 import AdminMerch from './Admin/AdminMerch';
 import AdminOrders from './Admin/AdminOrders';
+import AdminPayments from './Admin/AdminPayments';
 import AdminAddEvent from './Admin/AdminAddEvent';
 import AdminAddMerch from './Admin/AdminAddMerch';
 import { AuthProvider } from './pages/AuthProvider';
@@ -25,8 +26,8 @@ import LogoutButton from './components/LogoutButton';
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
         <TokenExtractor />
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -48,11 +49,12 @@ function App() {
           <Route path="/adminupcomingevents" element={<AdminProtectedRoute><AdminUpcomingEvents /></AdminProtectedRoute>} />
           <Route path="/adminmerch" element={<AdminProtectedRoute><AdminMerch /></AdminProtectedRoute>} />
           <Route path="/adminorders" element={<AdminProtectedRoute><AdminOrders /></AdminProtectedRoute>} />
+          <Route path="/adminpayments" element={<AdminProtectedRoute><AdminPayments /></AdminProtectedRoute>} />
           <Route path="/adminaddevent" element={<AdminProtectedRoute><AdminAddEvent /></AdminProtectedRoute>} />
           <Route path="/adminaddmerch" element={<AdminProtectedRoute><AdminAddMerch /></AdminProtectedRoute>} />
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
