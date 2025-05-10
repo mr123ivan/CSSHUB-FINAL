@@ -57,7 +57,7 @@ const UserPage = () => {
 
   return (
     <div className="min-h-screen flex">
-      <Sidebar userName="User" />
+      <Sidebar />
       <div className="flex-1 bg-gradient-to-b from-yellow-400 to-yellow-600 flex flex-col">
         <UserNavbar />
         <div className="p-6 flex-1 overflow-y-auto">

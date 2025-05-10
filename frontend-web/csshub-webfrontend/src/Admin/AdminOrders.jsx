@@ -65,11 +65,13 @@ const AdminOrders = () => {
   const fetchOrders = async () => {
     setLoading(true);
     setError(null);
+    const config = getAuthConfig();
     
     try {
-      const response = await axios.get('http://localhost:8080/api/orders', getAuthConfig());
+      // Try the Azure endpoint first
+      const response = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/orders', config);
       
-      if (response.data && response.data.length > 0) {
+      if (Array.isArray(response.data) && response.data.length > 0) {
         const formattedOrders = response.data.map(order => ({
           id: order.id || order.orderId,
           orderId: order.orderId || order.id,
@@ -88,61 +90,50 @@ const AdminOrders = () => {
         setFilteredOrders(formattedOrders);
       } else {
         setOrders([]);
+        setFilteredOrders([]);
         setError('No orders found in the database');
       }
-    } catch (err) {
-      console.error('Error fetching orders:', err);
-      if (err.response && err.response.status === 401) {
-        setError('Authentication required. Please log in.');
-        logoutAdmin();
-        navigate('/adminlogin');
-      } else {
-        setError('Cannot access orders: Failed to load orders from server. Demo mode enabled for UI testing.');
-        // Provide sample data for UI testing
-        const sampleOrders = [
-          {
-            id: 1,
-            orderId: 'ORD-001',
-            user: { id: 1, username: 'student1', email: 'student1@example.com' },
-            merchandise: { id: 1, name: 'CSS T-Shirt', price: 299.99 },
-            event: null,
-            orderDate: new Date().toISOString(),
-            quantity: 2,
-            totalAmount: 599.98,
-            paymentStatus: 'Pending',
-            orderStatus: 'Processing',
-            receiptImage: null
-          },
-          {
-            id: 2,
-            orderId: 'ORD-002',
-            user: { id: 2, username: 'student2', email: 'student2@example.com' },
-            merchandise: null,
-            event: { id: 1, name: 'CSS Workshop', price: 499.99 },
-            orderDate: new Date(Date.now() - 2*24*60*60*1000).toISOString(),
-            quantity: 1,
-            totalAmount: 499.99,
-            paymentStatus: 'Paid',
-            orderStatus: 'Completed',
-            receiptImage: 'sample-receipt'
-          },
-          {
-            id: 3,
-            orderId: 'ORD-003',
-            user: { id: 3, username: 'student3', email: 'student3@example.com' },
-            merchandise: { id: 2, name: 'CSS Hoodie', price: 499.99 },
-            event: null,
-            orderDate: new Date(Date.now() - 5*24*60*60*1000).toISOString(),
-            quantity: 1,
-            totalAmount: 499.99,
-            paymentStatus: 'Rejected',
-            orderStatus: 'Cancelled',
-            receiptImage: 'sample-receipt'
-          }
-        ];
+    } catch (azureErr) {
+      console.error('Error fetching orders from Azure:', azureErr);
+      
+      // Fall back to localhost if Azure fails
+      try {
+        const localResponse = await axios.get('http://localhost:8080/api/orders', config);
         
-        setOrders(sampleOrders);
-        setFilteredOrders(sampleOrders);
+        if (Array.isArray(localResponse.data) && localResponse.data.length > 0) {
+          const formattedOrders = localResponse.data.map(order => ({
+            id: order.id || order.orderId,
+            orderId: order.orderId || order.id,
+            user: order.user,
+            merchandise: order.merchandise,
+            event: order.event,
+            orderDate: order.orderDate,
+            quantity: order.quantity || 1,
+            totalAmount: order.totalAmount,
+            paymentStatus: order.paymentStatus,
+            orderStatus: order.orderStatus,
+            receiptImage: order.receiptImage ? true : null
+          }));
+          
+          setOrders(formattedOrders);
+          setFilteredOrders(formattedOrders);
+          setError(null); // Clear any previous errors
+        } else {
+          setOrders([]);
+          setFilteredOrders([]);
+          setError('No orders found in the database');
+        }
+      } catch (localErr) {
+        console.error('Error fetching orders from localhost:', localErr);
+        if (localErr.response && localErr.response.status === 401) {
+          setError('Authentication required. Please log in.');
+          logoutAdmin();
+          navigate('/adminlogin');
+        } else {
+          setError('Failed to load orders from server. Please try again later.');
+          setOrders([]);
+          setFilteredOrders([]);
+        }
       }
     } finally {
       setLoading(false);
@@ -221,10 +212,6 @@ const AdminOrders = () => {
   const getReceiptImageUrl = (order) => {
     if (!order || !order.receiptImage) {
       return 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22600%22%20height%3D%22400%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20fill%3D%22%23333%22%20width%3D%22600%22%20height%3D%22400%22%2F%3E%3Ctext%20fill%3D%22%23FFCC00%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2236%22%20text-anchor%3D%22middle%22%20x%3D%22300%22%20y%3D%22200%22%3ENo%20Receipt%3C%2Ftext%3E%3C%2Fsvg%3E';
-    }
-    
-    if (order.receiptImage === 'sample-receipt') {
-      return 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22600%22%20height%3D%22800%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20fill%3D%22%23f8f9fa%22%20width%3D%22600%22%20height%3D%22800%22%2F%3E%3Ctext%20fill%3D%22%23212529%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2236%22%20text-anchor%3D%22middle%22%20x%3D%22300%22%20y%3D%22100%22%3EReceipt%3C%2Ftext%3E%3Ctext%20fill%3D%22%23212529%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2224%22%20text-anchor%3D%22middle%22%20x%3D%22300%22%20y%3D%22200%22%3EOrder%20%23%3A%20' + order.orderId + '%3C%2Ftext%3E%3Ctext%20fill%3D%22%23212529%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2224%22%20text-anchor%3D%22middle%22%20x%3D%22300%22%20y%3D%22250%22%3EAmount%3A%20%E2%82%B1' + order.totalAmount + '%3C%2Ftext%3E%3Ctext%20fill%3D%22%23198754%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2230%22%20text-anchor%3D%22middle%22%20x%3D%22300%22%20y%3D%22350%22%3EPAID%3C%2Ftext%3E%3C%2Fsvg%3E';
     }
     
     return `http://localhost:8080/api/orders/receipt-image/${order.orderId}?time=${new Date().getTime()}`;
@@ -447,7 +434,6 @@ const AdminOrders = () => {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Amount</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Payment Status</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Order Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-700">
@@ -476,68 +462,11 @@ const AdminOrders = () => {
                         <td className="px-4 py-4 whitespace-nowrap text-sm">
                           {getStatusBadge(order.orderStatus)}
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm space-x-2">
-                          <button 
-                            onClick={() => handleViewReceipt(order)} 
-                            className="bg-blue-500/20 text-blue-400 p-1.5 rounded hover:bg-blue-500/30 transition-colors"
-                            title="View Receipt"
-                          >
-                            <FaEye />
-                          </button>
-                          
-                          <div className="inline-block relative group">
-                            <button className="bg-green-500/20 text-green-400 p-1.5 rounded hover:bg-green-500/30 transition-colors">
-                              <FaCheck />
-                            </button>
-                            <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-10 hidden group-hover:block">
-                              <div className="py-1">
-                                <button 
-                                  onClick={() => handleUpdatePayment(order.orderId, 'Paid')}
-                                  className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                                  disabled={order.paymentStatus === 'Paid'}
-                                >
-                                  Mark Payment as Paid
-                                </button>
-                                <button 
-                                  onClick={() => handleUpdateStatus(order.orderId, 'Completed')}
-                                  className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                                  disabled={order.orderStatus === 'Completed'}
-                                >
-                                  Mark Order as Completed
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="inline-block relative group">
-                            <button className="bg-red-500/20 text-red-400 p-1.5 rounded hover:bg-red-500/30 transition-colors">
-                              <FaTimes />
-                            </button>
-                            <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-10 hidden group-hover:block">
-                              <div className="py-1">
-                                <button 
-                                  onClick={() => handleUpdatePayment(order.orderId, 'Rejected')}
-                                  className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                                  disabled={order.paymentStatus === 'Rejected'}
-                                >
-                                  Reject Payment
-                                </button>
-                                <button 
-                                  onClick={() => handleUpdateStatus(order.orderId, 'Cancelled')}
-                                  className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                                  disabled={order.orderStatus === 'Cancelled'}
-                                >
-                                  Cancel Order
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
                       </tr>
                     ))
                   ) : !loading && orders.length === 0 ? (
                     <tr>
-                      <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan="7" className="px-4 py-8 text-center text-gray-500">
                         No orders found in the database
                       </td>
                     </tr>

@@ -156,8 +156,8 @@ const Invoice = () => {
 
         <div>
           <p className="mt-2"><strong>Buyer Information:</strong></p>
-          <p>Name: {userName || "Anonymous User"}</p>
-          <p>Email: {userEmail || "Not provided"}</p>
+          <p>Name: {user?.username || userName || "Anonymous User"}</p>
+          <p>Email: {user?.email || userEmail || "Not provided"}</p>
           {orderId && <p>Order ID: {orderId}</p>}
         </div>
 
@@ -172,7 +172,7 @@ const Invoice = () => {
           ) : (
             <p>Date: {item.eventDate}</p>
           )}
-          <p><strong>Total Amount: ₱{isMerch ? item.price : 'TBD'}</strong></p>
+          <p><strong>Total Amount: ₱{isMerch ? item.price : (item.price || 'TBD')}</strong></p>
         </div>
 
         <div>

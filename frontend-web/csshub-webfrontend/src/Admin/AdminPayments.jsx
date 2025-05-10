@@ -56,7 +56,7 @@ const AdminPayments = () => {
     setError(null);
     
     try {
-      // First try to get payments from orders with the auth config
+      // Fetch orders directly - no need for special admin endpoints due to security config updates
       const response = await axios.get('http://localhost:8080/api/orders', getAuthConfig());
       
       if (response.data && response.data.length > 0) {
@@ -91,6 +91,15 @@ const AdminPayments = () => {
     setShowReceiptModal(true);
   };
 
+  const getReceiptImageUrl = (payment) => {
+    if (!payment || !payment.orderId) {
+      return 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22600%22%20height%3D%22400%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20fill%3D%22%23333%22%20width%3D%22600%22%20height%3D%22400%22%2F%3E%3Ctext%20fill%3D%22%23FFCC00%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2236%22%20text-anchor%3D%22middle%22%20x%3D%22300%22%20y%3D%22200%22%3ENo%20Receipt%3C%2Ftext%3E%3C%2Fsvg%3E';
+    }
+    
+    // This endpoint comes from the order processing system we implemented previously
+    return `http://localhost:8080/api/orders/receipt-image/${payment.orderId}?time=${new Date().getTime()}`;
+  };
+
   const closeModal = () => {
     setShowReceiptModal(false);
     setSelectedPayment(null);
@@ -98,35 +107,50 @@ const AdminPayments = () => {
 
   const handleUpdatePaymentStatus = async (paymentId, newStatus) => {
     try {
-      // Get the corresponding order ID (in this case they're the same)
-      const orderId = paymentId;
+      setLoading(true);
       
-      // Update the order's payment status
-      await axios.put(`http://localhost:8080/api/orders/edit/${orderId}`, {
-        paymentStatus: newStatus
-      }, getAuthConfig());
+      // Use admin-friendly endpoint for order updates
+      const getReceiptImageUrl = (payment) => {
+        // Use the orders receipt endpoint from the order processing system
+        return `http://localhost:8080/api/orders/receipt-image/${payment.orderId || payment.id}`;
+      };
       
-      // Update local state
-      setPayments(prevPayments => 
-        prevPayments.map(payment => 
-          payment.id === paymentId 
-            ? { ...payment, status: newStatus } 
-            : payment
-        )
+      const response = await axios.put(`http://localhost:8080/api/orders/edit/${paymentId}`, 
+        { paymentStatus: newStatus },
+        getAuthConfig()
       );
       
-      // Refresh payments list
+      // Update local state immediately for better user experience
+      const updatedPayments = payments.map(payment => 
+        payment.id === paymentId ? { ...payment, status: newStatus } : payment
+      );
+      
+      setPayments(updatedPayments);
+      applyFilters(); // Re-apply filters to update filtered payments
+      
+      if (response.status === 200) {
+        alert(`Payment status updated to ${newStatus}`);
+      } else {
+        alert(`Payment status updated to ${newStatus} (local only)`);
+      }
+      
+      // Refresh data from server
       fetchPayments();
+      
     } catch (err) {
       console.error('Error updating payment status:', err);
-      // Update UI even if server request fails
-      setPayments(prevPayments => 
-        prevPayments.map(payment => 
-          payment.id === paymentId 
-            ? { ...payment, status: newStatus } 
-            : payment
-        )
+      
+      // Update locally anyway - ensures UI remains responsive even with backend issues
+      const updatedPayments = payments.map(payment => 
+        payment.id === paymentId ? { ...payment, status: newStatus } : payment
       );
+      
+      setPayments(updatedPayments);
+      applyFilters();
+      
+      alert(`Payment status updated to ${newStatus} (local only). Server error: ${err.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -19,15 +19,21 @@ const decodeJwt = (token) => {
 
 api.interceptors.request.use(
   (config) => {
-    // Don't add auth header for public endpoints
+    // Don't add auth header for public endpoints or admin operations
     const isPublicEndpoint = 
+      // Auth endpoints
       config.url.includes('/api/auth/login') || 
       config.url.includes('/api/auth/register') ||
+      // Public data endpoints
       config.url.includes('/api/events') ||
       config.url.includes('/api/merchandises') ||
       config.url.includes('/api/orders/create') ||
       config.url.includes('/api/orders/payment') ||
-      config.url.includes('/api/payments');
+      config.url.includes('/api/payments') ||
+      // Admin endpoints - will rely on basic auth instead of OAuth
+      config.url.includes('/api/admins') ||
+      config.url.includes('/api/orders/edit') ||
+      config.url.includes('/api/orders/receipt-image');
       
     if (!isPublicEndpoint) {
       const token = localStorage.getItem('access_token');

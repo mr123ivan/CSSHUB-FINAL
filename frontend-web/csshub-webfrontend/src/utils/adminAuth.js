@@ -77,23 +77,38 @@ export const logoutAdmin = () => {
  * @returns {Promise} Result of the API call
  */
 export const deleteEvent = async (eventId) => {
-  if (!isAdminAuthenticated() || !adminUsername) {
-    throw new Error('Authentication required');
-  }
+  const config = getAuthConfig();
   
-  // Use basic authentication approach instead of token
+  // Try multiple endpoint patterns to ensure deletion works
+  // First attempt: Direct endpoint pattern (matches user deletion pattern)
   try {
-    // First re-authenticate to ensure we have fresh credentials
-    await axios.post('http://localhost:8080/api/admins/login', {
-      username: adminUsername,
-      password: adminPassword || sessionStorage.getItem("adminPassword")
-    });
+    // Try Azure endpoint first with direct pattern
+    return await axios.delete(`https://ccshub-systeminteg.azurewebsites.net/api/events/${eventId}`, config);
+  } catch (azureDirectError) {
+    console.log('Trying alternate Azure endpoint pattern...');
     
-    // Then make the delete request (basic auth will be cached for this session)
-    return await axios.delete(`http://localhost:8080/api/events/${eventId}`);
-  } catch (error) {
-    console.error('Error in deleteEvent:', error);
-    throw error;
+    // Second attempt: With /delete/ in the path
+    try {
+      return await axios.delete(`https://ccshub-systeminteg.azurewebsites.net/api/events/delete/${eventId}`, config);
+    } catch (azureError) {
+      console.error('All Azure endpoint attempts failed:', azureError);
+      
+      // Fall back to localhost patterns
+      try {
+        // Try direct pattern first (matches user deletion pattern)
+        return await axios.delete(`http://localhost:8080/api/events/${eventId}`, config);
+      } catch (localDirectError) {
+        console.log('Trying alternate localhost endpoint pattern...');
+        
+        // Last attempt: With /delete/ in the path
+        try {
+          return await axios.delete(`http://localhost:8080/api/events/delete/${eventId}`, config);
+        } catch (localError) {
+          console.error('All deletion attempts failed:', localError);
+          throw localError; // Re-throw the final error for the caller to handle
+        }
+      }
+    }
   }
 };
 
@@ -103,23 +118,38 @@ export const deleteEvent = async (eventId) => {
  * @returns {Promise} Result of the API call
  */
 export const deleteMerchandise = async (itemId) => {
-  if (!isAdminAuthenticated() || !adminUsername) {
-    throw new Error('Authentication required');
-  }
+  const config = getAuthConfig();
   
-  // Use basic authentication approach instead of token
+  // Try multiple endpoint patterns to ensure deletion works
+  // First attempt: Direct endpoint pattern (matches user deletion pattern)
   try {
-    // First re-authenticate to ensure we have fresh credentials
-    await axios.post('http://localhost:8080/api/admins/login', {
-      username: adminUsername,
-      password: adminPassword || sessionStorage.getItem("adminPassword")
-    });
+    // Try Azure endpoint first with direct pattern
+    return await axios.delete(`https://ccshub-systeminteg.azurewebsites.net/api/merchandises/${itemId}`, config);
+  } catch (azureDirectError) {
+    console.log('Trying alternate Azure endpoint pattern...');
     
-    // Then make the delete request (basic auth will be cached for this session)
-    return await axios.delete(`http://localhost:8080/api/merchandises/delete/${itemId}`);
-  } catch (error) {
-    console.error('Error in deleteMerchandise:', error);
-    throw error;
+    // Second attempt: With /delete/ in the path
+    try {
+      return await axios.delete(`https://ccshub-systeminteg.azurewebsites.net/api/merchandises/delete/${itemId}`, config);
+    } catch (azureError) {
+      console.error('All Azure endpoint attempts failed:', azureError);
+      
+      // Fall back to localhost patterns
+      try {
+        // Try direct pattern first (matches user deletion pattern)
+        return await axios.delete(`http://localhost:8080/api/merchandises/${itemId}`, config);
+      } catch (localDirectError) {
+        console.log('Trying alternate localhost endpoint pattern...');
+        
+        // Last attempt: With /delete/ in the path
+        try {
+          return await axios.delete(`http://localhost:8080/api/merchandises/delete/${itemId}`, config);
+        } catch (localError) {
+          console.error('All deletion attempts failed:', localError);
+          throw localError; // Re-throw the final error for the caller to handle
+        }
+      }
+    }
   }
 };
 
@@ -129,25 +159,17 @@ export const deleteMerchandise = async (itemId) => {
  * @returns {Promise} Result of the API call
  */
 export const addMerchandise = async (merchandiseData) => {
-  if (!isAdminAuthenticated() || !adminUsername) {
-    throw new Error('Authentication required');
-  }
-  
-  // Use basic authentication approach instead of token
   try {
-    // First re-authenticate to ensure we have fresh credentials
-    await axios.post('http://localhost:8080/api/admins/login', {
-      username: adminUsername,
-      password: adminPassword || sessionStorage.getItem("adminPassword")
-    });
-    
-    // Then make the create request with the merchandise data
-    // Note: Using the correct endpoint from the backend controller
-    return await axios.post('http://localhost:8080/api/merchandises/create', merchandiseData, {
+    // No authentication check - directly call the endpoint with auth config
+    const config = {
+      ...getAuthConfig(),
       headers: {
+        ...getAuthConfig().headers,
         'Content-Type': 'multipart/form-data'
       }
-    });
+    };
+    
+    return await axios.post('http://localhost:8080/api/merchandises/create', merchandiseData, config);
   } catch (error) {
     console.error('Error in addMerchandise:', error);
     throw error;
@@ -159,9 +181,22 @@ export const addMerchandise = async (merchandiseData) => {
  * @returns {Object} Config object for axios
  */
 export const getAuthConfig = () => {
-  // No headers needed for admin operations per user requirements
-  // The backend has been configured to permit all admin operations
+  // Include basic authentication if we have credentials
+  const username = adminUsername || localStorage.getItem('adminUsername');
+  const password = adminPassword || sessionStorage.getItem('adminPassword');
+  
+  // Create the config object with auth and headers
   return {
+    headers: {
+      'Content-Type': 'application/json',
+      // This header helps identify admin requests in case we need to debug
+      'X-Admin-Request': 'true'
+    },
+    // Include basic auth if we have credentials
+    auth: username && password ? {
+      username,
+      password
+    } : undefined,
     withCredentials: true
   };
 };

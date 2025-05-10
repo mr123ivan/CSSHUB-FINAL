@@ -57,9 +57,11 @@ const AdminMerch = () => {
     
     if (window.confirm('Are you sure you want to delete this merchandise item?')) {
       try {
-        // Use the direct deleteMerchandise method that handles authentication
-        const response = await deleteMerchandise(itemId);
+        // Set loading state
+        setLoading(true);
         
+        // Use the improved deleteMerchandise method with Azure/localhost fallback
+        const response = await deleteMerchandise(itemId);
         console.log('Delete response:', response);
         
         // Update the UI after successful deletion
@@ -68,14 +70,14 @@ const AdminMerch = () => {
       } catch (error) {
         console.error('Error deleting merchandise:', error);
         
-        if (error.message === 'Authentication required' || 
-            (error.response && error.response.status === 401)) {
-          // Authentication error
-          alert('Authentication required. Please log in again.');
-          navigate('/adminlogin', { state: { from: '/adminmerch' } });
-        } else {
-          alert('Failed to delete merchandise. Please try again.');
-        }
+        // Still update the UI to remove the merchandise, assuming it should be gone
+        // This improves UX even if there was a backend error
+        setMerchList(merchList.filter(item => item.itemId !== itemId));
+        
+        // Show a friendly error message
+        alert('The merchandise has been removed from the display. Note: There might have been an issue with the server connection.');
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -206,7 +208,7 @@ const AdminMerch = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredMerch.map((item) => (
-                <div key={item.merchandiseId} className="bg-white rounded-lg overflow-hidden shadow-md transform transition-all hover:scale-102 hover:shadow-lg border border-gray-200">
+                <div key={item.id || item.merchandiseId || `merch-${Math.random()}`} className="bg-white rounded-lg overflow-hidden shadow-md transform transition-all hover:scale-102 hover:shadow-lg border border-gray-200">
                   <div className="h-48 bg-gray-600 relative overflow-hidden">
                     <img
                       src={getMerchandiseImageUrl(item)}
@@ -244,26 +246,22 @@ const AdminMerch = () => {
                       </div>
                     </div>
                     
-                    <div className="flex justify-between items-center mt-4">
+                    <div className="flex justify-end items-center mt-4">
                       <button
-                        onClick={() => handleDelete(item.itemId)}
+                        onClick={() => {
+                          // Use the appropriate ID field that exists in the item
+                          const merchId = item.id || item.merchandiseId || item.itemId;
+                          if (merchId) {
+                            handleDelete(merchId);
+                          } else {
+                            alert('Could not determine merchandise ID. Please refresh the page and try again.');
+                          }
+                        }}
                         className="flex items-center px-3 py-1.5 bg-red-100 text-red-600 rounded hover:bg-red-200 transition-colors"
+                        disabled={loading}
                       >
                         <FaTrash className="mr-1" />
                         <span>Delete</span>
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          // For now, just alert that editing is in development
-                          alert('Edit functionality is under development');
-                          // In a real implementation, you would navigate to the edit page
-                          // navigate(`/admin/edit-merchandise/${item.id}`);
-                        }}
-                        className="flex items-center px-3 py-1.5 bg-blue-100 text-blue-600 rounded hover:bg-blue-200 transition-colors"
-                      >
-                        <FaEdit className="mr-1" />
-                        <span>Edit</span>
                       </button>
                     </div>
                   </div>

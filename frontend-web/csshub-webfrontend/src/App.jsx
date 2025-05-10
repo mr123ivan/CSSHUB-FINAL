@@ -11,6 +11,8 @@ import EventDetailPage from './pages/EventDetailPage';
 import ProductPreview from './pages/ProductPreview';
 import GcashPayment from './pages/GcashPayment';
 import Invoice from './pages/Invoice';
+import UserProfile from './pages/UserProfile';
+import UserOrders from './pages/UserOrders';
 import AdminLogin from './Admin/AdminLogin';
 import AdminMain from './Admin/AdminMain';
 import AdminMembers from './Admin/AdminMembers';
@@ -40,6 +42,8 @@ function App() {
           <Route path="/productpreview" element={<ProductPreview />} />
           <Route path="/gcashpayment" element={<GcashPayment />} />
           <Route path="/invoice" element={<Invoice />} />
+          <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><UserOrders /></ProtectedRoute>} />
           <Route path="/logout" element={<LogoutButton />} />
 
           {/* Admin routes */}

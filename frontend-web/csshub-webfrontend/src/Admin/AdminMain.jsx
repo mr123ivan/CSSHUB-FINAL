@@ -4,7 +4,7 @@ import axios from 'axios';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminHeader from '../components/AdminHeader';
 import AdminActionButtons from '../components/AdminActionButtons';
-import { FaUser, FaCalendarAlt, FaTshirt, FaShoppingCart, FaUserCheck } from 'react-icons/fa';
+import { FaUser, FaCalendarAlt, FaTshirt, FaShoppingCart, FaUserCheck, FaEnvelope } from 'react-icons/fa';
 import { getAuthConfig, logoutAdmin } from '../utils/adminAuth';
 
 const AdminDashboard = () => {
@@ -45,12 +45,21 @@ const AdminDashboard = () => {
         let usersData = [], eventsData = [], merchandiseData = [], ordersData = [];
         
         try {
-          const usersResponse = await axios.get('http://localhost:8080/api/users', config);
+          // Try the Azure endpoint first
+          const usersResponse = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/users', config);
           usersData = usersResponse.data || [];
           setUsers(usersData);
         } catch (usersErr) {
-          console.error('Error fetching users:', usersErr);
-          setUsers([]);
+          console.error('Error fetching users from Azure:', usersErr);
+          // Fall back to localhost if Azure fails
+          try {
+            const localResponse = await axios.get('http://localhost:8080/api/users', config);
+            usersData = localResponse.data || [];
+            setUsers(usersData);
+          } catch (localErr) {
+            console.error('Error fetching users from localhost:', localErr);
+            setUsers([]);
+          }
         }
         
         try {
@@ -415,8 +424,17 @@ const AdminDashboard = () => {
                   <div className="space-y-3">
                     {users.map((user) => (
                       <div key={user.userId} className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors">
-                        <div className="font-semibold text-white">{user.username}</div>
-                        <div className="text-gray-400 text-sm">{user.email}</div>
+                        <div className="flex justify-between items-center">
+                          <div className="font-semibold text-white flex items-center">
+                            <FaUser className="mr-2 text-yellow-500" />
+                            {user.username}
+                          </div>
+                          <div className="text-xs text-gray-400">{user.role || 'Member'}</div>
+                        </div>
+                        <div className="text-sm text-gray-400 mt-1">
+                          <FaEnvelope className="inline-block mr-1 text-xs" /> 
+                          {user.email}
+                        </div>
                         <div className="flex justify-between mt-2 text-xs">
                           <div>
                             <span className="text-yellow-500">Registered:</span>{' '}

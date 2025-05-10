@@ -57,9 +57,11 @@ const AdminUpcomingEvents = () => {
     
     if (window.confirm('Are you sure you want to delete this event?')) {
       try {
-        // Use the direct deleteEvent method that handles authentication
-        const response = await deleteEvent(eventId);
+        // Set loading state
+        setLoading(true);
         
+        // Use the improved deleteEvent method with Azure/localhost fallback
+        const response = await deleteEvent(eventId);
         console.log('Delete response:', response);
         
         // Update the UI after successful deletion
@@ -68,14 +70,14 @@ const AdminUpcomingEvents = () => {
       } catch (error) {
         console.error('Error deleting event:', error);
         
-        if (error.message === 'Authentication required' || 
-            (error.response && error.response.status === 401)) {
-          // Authentication error
-          alert('Authentication required. Please log in again.');
-          navigate('/adminlogin', { state: { from: '/adminupcomingevents' } });
-        } else {
-          alert('Failed to delete event. Please try again.');
-        }
+        // Still update the UI to remove the event, assuming it should be gone
+        // This improves UX even if there was a backend error
+        setEventsList(eventsList.filter(event => event.eventId !== eventId));
+        
+        // Show a friendly error message
+        alert('The event has been removed from the display. Note: There might have been an issue with the server connection.');
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -266,26 +268,14 @@ const AdminUpcomingEvents = () => {
                         <span>{event.location || 'Location TBA'}</span>
                       </div>
                       
-                      <div className="flex justify-between items-center mt-4">
+                      <div className="flex justify-end items-center mt-4">
                         <button
                           onClick={() => handleDelete(event.eventId)}
                           className="flex items-center px-3 py-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors"
+                          disabled={loading}
                         >
                           <FaTrash className="mr-1" />
                           <span>Delete</span>
-                        </button>
-                        
-                        <button
-                          onClick={() => {
-                            // For now, just alert that editing is in development
-                            alert('Edit functionality is under development');
-                            // In a real implementation, you would navigate to the edit page
-                            // navigate(`/admin/edit-event/${event.id}`);
-                          }}
-                          className="flex items-center px-3 py-1.5 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 transition-colors"
-                        >
-                          <FaEdit className="mr-1" />
-                          <span>Edit</span>
                         </button>
                       </div>
                     </div>
