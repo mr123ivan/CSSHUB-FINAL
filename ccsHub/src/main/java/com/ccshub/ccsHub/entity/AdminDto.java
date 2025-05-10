@@ -4,16 +4,14 @@ public class AdminDto {
 
     private String username;
     private String role;
-    private int userId;
     private String password;
 
     public AdminDto() {
     }
 
-    public AdminDto(String username, String role, int userId, String password) {
+    public AdminDto(String username, String role, String password) {
         this.username = username;
         this.role = role;
-        this.userId = userId;
         this.password = password;
     }
 
@@ -33,14 +31,6 @@ public class AdminDto {
         this.role = role;
     }
 
-    public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-
     public String getPassword() {
         return password;
     }
@@ -48,5 +38,4 @@ public class AdminDto {
     public void setPassword(String password) {
         this.password = password;
     }
-
 }

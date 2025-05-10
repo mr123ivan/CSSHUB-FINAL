@@ -11,12 +11,15 @@ import EventDetailPage from './pages/EventDetailPage';
 import ProductPreview from './pages/ProductPreview';
 import GcashPayment from './pages/GcashPayment';
 import Invoice from './pages/Invoice';
+import UserProfile from './pages/UserProfile';
+import UserOrders from './pages/UserOrders';
 import AdminLogin from './Admin/AdminLogin';
 import AdminMain from './Admin/AdminMain';
 import AdminMembers from './Admin/AdminMembers';
 import AdminUpcomingEvents from './Admin/AdminUpcomingEvents';
 import AdminMerch from './Admin/AdminMerch';
 import AdminOrders from './Admin/AdminOrders';
+import AdminPayments from './Admin/AdminPayments';
 import AdminAddEvent from './Admin/AdminAddEvent';
 import AdminAddMerch from './Admin/AdminAddMerch';
 import { AuthProvider } from './pages/AuthProvider';
@@ -25,8 +28,8 @@ import LogoutButton from './components/LogoutButton';
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <AuthProvider>
         <TokenExtractor />
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -39,6 +42,8 @@ function App() {
           <Route path="/productpreview" element={<ProductPreview />} />
           <Route path="/gcashpayment" element={<GcashPayment />} />
           <Route path="/invoice" element={<Invoice />} />
+          <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><UserOrders /></ProtectedRoute>} />
           <Route path="/logout" element={<LogoutButton />} />
 
           {/* Admin routes */}
@@ -48,11 +53,12 @@ function App() {
           <Route path="/adminupcomingevents" element={<AdminProtectedRoute><AdminUpcomingEvents /></AdminProtectedRoute>} />
           <Route path="/adminmerch" element={<AdminProtectedRoute><AdminMerch /></AdminProtectedRoute>} />
           <Route path="/adminorders" element={<AdminProtectedRoute><AdminOrders /></AdminProtectedRoute>} />
+          <Route path="/adminpayments" element={<AdminProtectedRoute><AdminPayments /></AdminProtectedRoute>} />
           <Route path="/adminaddevent" element={<AdminProtectedRoute><AdminAddEvent /></AdminProtectedRoute>} />
           <Route path="/adminaddmerch" element={<AdminProtectedRoute><AdminAddMerch /></AdminProtectedRoute>} />
         </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

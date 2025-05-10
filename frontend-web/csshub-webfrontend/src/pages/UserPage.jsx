@@ -3,32 +3,46 @@ import { Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import UserNavbar from '../components/UserNavbar';
 import api from '../services/api';
-import { FaCalendarAlt, FaTshirt, FaArrowRight, FaMapMarkerAlt, FaClock, FaDollarSign } from 'react-icons/fa';
+import { useAuth } from './AuthProvider';
+import { FaCalendarAlt, FaTshirt, FaArrowRight, FaMapMarkerAlt, FaClock, FaDollarSign, FaSignInAlt } from 'react-icons/fa';
 
 const UserPage = () => {
   const [events, setEvents] = useState([]);
   const [merchandise, setMerchandise] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError(null);
+      
       try {
-        const [eventsResponse, merchandiseResponse] = await Promise.all([
-          api.get('/events'),
-          api.get('/merchandises'),
-        ]);
-        setEvents(eventsResponse.data);
-        setMerchandise(merchandiseResponse.data);
-        setError(null);
+        // Use separate try-catch blocks for each request to handle partial failures
+        try {
+          const eventsResponse = await api.get('/api/events');
+          setEvents(eventsResponse.data);
+        } catch (eventsErr) {
+          console.error('Error fetching events:', eventsErr);
+          setEvents([]);
+        }
+        
+        try {
+          const merchandiseResponse = await api.get('/api/merchandises');
+          setMerchandise(merchandiseResponse.data);
+        } catch (merchErr) {
+          console.error('Error fetching merchandise:', merchErr);
+          setMerchandise([]);
+        }
       } catch (err) {
         console.error('Error fetching data:', err.response ? err.response.data : err.message);
-        setError('Failed to load content. Please ensure you are logged in.');
+        setError('Failed to load content. Please try refreshing the page.');
       } finally {
         setLoading(false);
       }
     };
+    
     fetchData();
   }, []);
 
@@ -43,13 +57,29 @@ const UserPage = () => {
 
   return (
     <div className="min-h-screen flex">
-      <Sidebar userName="User" />
+      <Sidebar />
       <div className="flex-1 bg-gradient-to-b from-yellow-400 to-yellow-600 flex flex-col">
         <UserNavbar />
         <div className="p-6 flex-1 overflow-y-auto">
-          <div className="bg-black/80 text-white rounded-lg p-6 mb-8 shadow-lg">
-            <h1 className="text-3xl font-bold mb-2">Welcome, User!</h1>
-            <p className="text-yellow-400">Explore upcoming events and merchandise from the Computer Studies Society.</p>
+          <div className="bg-black/80 text-white rounded-lg p-6 mb-8 shadow-lg flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Welcome, {isAuthenticated && user ? user.username : 'Guest'}!</h1>
+              <p className="text-yellow-400">Explore upcoming events and merchandise from the Computer Studies Society.</p>
+            </div>
+            {!isAuthenticated && (
+              <div className="ml-4">
+                <Link 
+                  to="#" 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.querySelector('button.px-4.py-2.bg-yellow-500').click();
+                  }}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded-lg flex items-center"
+                >
+                  <FaSignInAlt className="mr-2" /> Login to Order
+                </Link>
+              </div>
+            )}
           </div>
           {loading && (
             <div className="flex justify-center items-center my-8">
@@ -153,5 +183,8 @@ const UserPage = () => {
     </div>
   );
 };
+
+
+
 
 export default UserPage;

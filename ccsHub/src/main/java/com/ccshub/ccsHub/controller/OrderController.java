@@ -2,6 +2,7 @@ package com.ccshub.ccsHub.controller;
 
 import com.ccshub.ccsHub.entity.Order;
 import com.ccshub.ccsHub.entity.OrderDto;
+import com.ccshub.ccsHub.entity.Merchandise;
 import com.ccshub.ccsHub.repository.OrderRepository;
 import com.ccshub.ccsHub.repository.UserRepository;
 import com.ccshub.ccsHub.repository.MerchandiseRepository;
@@ -158,8 +159,55 @@ public class OrderController {
                 .body(order.getReceiptImage());
     }
 
+    @PostMapping("/update/{orderId}")
+    public ResponseEntity<?> updateOrder(@PathVariable int orderId, @RequestBody OrderDto dto) {
+        Order existingOrder = orderRepo.getOrderById(orderId);
+        if (existingOrder == null) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        // Get the previous payment status to check if it's being updated to "Approved"
+        String previousPaymentStatus = existingOrder.getPaymentStatus();
+        
+        // Only update the fields that are provided
+        if (dto.getPaymentStatus() != null) existingOrder.setPaymentStatus(dto.getPaymentStatus());
+        if (dto.getOrderStatus() != null) existingOrder.setOrderStatus(dto.getOrderStatus());
+        
+        // Update the order
+        orderRepo.updateOrder(existingOrder);
+        
+        // If payment is being approved, update merchandise inventory
+        if (dto.getPaymentStatus() != null && 
+            dto.getPaymentStatus().equals("Approved") && 
+            !"Approved".equals(previousPaymentStatus)) {
+            
+            // If this is a merchandise order, reduce inventory
+            if (existingOrder.getMerchandise() != null) {
+                try {
+                    // Get current merchandise using correct method name
+                    Merchandise merchandise = merchandiseRepo.getMerchandise(existingOrder.getMerchandise().getId());
+                    if (merchandise != null) {
+                        // Reduce stock by 1
+                        int currentStock = merchandise.getStock();
+                        if (currentStock > 0) {
+                            merchandise.setStock(currentStock - 1);
+                            merchandiseRepo.updateMerchandise(merchandise);
+                            System.out.println("Updated inventory for merchandise ID " + merchandise.getId() + 
+                                              ". New stock: " + (currentStock - 1));
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error updating merchandise inventory: " + e.getMessage());
+                    // Don't fail the order update if inventory update fails
+                }
+            }
+        }
+        
+        return ResponseEntity.ok(existingOrder);
+    }
+
     @PutMapping("/edit/{orderId}")
-    public ResponseEntity<Order> updateOrder(@PathVariable int orderId, @RequestBody OrderDto dto) {
+    public ResponseEntity<Order> editFullOrder(@PathVariable int orderId, @RequestBody OrderDto dto) {
         Order order = orderRepo.getOrderById(orderId);
         if (order == null) {
             return ResponseEntity.notFound().build();
@@ -173,8 +221,35 @@ public class OrderController {
         
         // Update status fields if provided
         if (dto.getPaymentStatus() != null) {
+            // Store previous status to check if payment is being approved
+            String previousStatus = order.getPaymentStatus();
             order.setPaymentStatus(dto.getPaymentStatus());
+            
+            // If payment is being approved, update merchandise inventory
+            if (dto.getPaymentStatus().equals("Approved") && 
+                !"Approved".equals(previousStatus) && 
+                order.getMerchandise() != null) {
+                
+                try {
+                    // Get current merchandise using correct method name
+                    Merchandise merchandise = merchandiseRepo.getMerchandise(order.getMerchandise().getId());
+                    if (merchandise != null) {
+                        // Reduce stock by 1
+                        int currentStock = merchandise.getStock();
+                        if (currentStock > 0) {
+                            merchandise.setStock(currentStock - 1);
+                            merchandiseRepo.updateMerchandise(merchandise);
+                            System.out.println("Updated inventory for merchandise ID " + merchandise.getId() + 
+                                              ". New stock: " + (currentStock - 1));
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Error updating merchandise inventory: " + e.getMessage());
+                    // Don't fail the order update if inventory update fails
+                }
+            }
         }
+        
         if (dto.getOrderStatus() != null) {
             order.setOrderStatus(dto.getOrderStatus());
         }

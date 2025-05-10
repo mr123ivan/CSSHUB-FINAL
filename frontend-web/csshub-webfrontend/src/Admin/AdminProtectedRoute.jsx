@@ -1,50 +1,51 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../pages/AuthProvider';
 import { useState, useEffect } from 'react';
-import api from '../services/api';
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
+import { isAdminAuthenticated } from '../utils/adminAuth';
 
 /**
  * AdminProtectedRoute component
- * Protects admin routes by checking authentication status and admin role
+ * Protects admin routes by checking admin authentication status
+ * Now simplified to just check admin credentials instead of role-based verification
  */
 const AdminProtectedRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
   const location = useLocation();
-  const [isAdmin, setIsAdmin] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [adminAuth, setAdminAuth] = useState(false);
 
   useEffect(() => {
-    const checkAdminRole = async () => {
+    // Simple check for admin authentication status using the utility function
+    const checkAdminAuth = () => {
+      setLoading(true);
       try {
-        const response = await api.get('/users/sync');
-        const user = response.data;
-        const adminResponse = await api.get(`/users/${user.userId}`);
-        const admin = adminResponse.data.admin;
-        setIsAdmin(admin && admin.role === 'ADMIN');
+        const isAdmin = isAdminAuthenticated();
+        setAdminAuth(isAdmin);
       } catch (error) {
-        console.error('Failed to check admin role:', error);
-        setIsAdmin(false);
+        console.error('Failed to check admin authentication:', error);
+        setAdminAuth(false);
+      } finally {
+        setLoading(false);
       }
     };
+    
+    checkAdminAuth();
+  }, []);
 
-    if (isAuthenticated) {
-      checkAdminRole();
-    }
-  }, [isAuthenticated]);
-
-  console.log("Admin authentication status:", isAuthenticated, "Admin role:", isAdmin);
-
-  if (!isAuthenticated) {
+  console.log("Admin authentication status:", adminAuth, "Loading:", loading);
+  
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+  
+  if (!adminAuth) {
     return <Navigate to="/adminlogin" state={{ from: location.pathname }} replace />;
   }
-
-  if (isAdmin === null) {
-    return <div>Loading...</div>;
-  }
-
-  if (!isAdmin) {
-    return <Navigate to="/userpage" replace />;
-  }
-
+  
   return children;
 };
 

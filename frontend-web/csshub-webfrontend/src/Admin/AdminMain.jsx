@@ -4,7 +4,8 @@ import axios from 'axios';
 import AdminSidebar from '../components/AdminSidebar';
 import AdminHeader from '../components/AdminHeader';
 import AdminActionButtons from '../components/AdminActionButtons';
-import { FaUser, FaCalendarAlt, FaTshirt, FaShoppingCart, FaUserCheck } from 'react-icons/fa';
+import { FaUser, FaCalendarAlt, FaTshirt, FaShoppingCart, FaUserCheck, FaEnvelope } from 'react-icons/fa';
+import { getAuthConfig, logoutAdmin } from '../utils/adminAuth';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -37,24 +38,56 @@ const AdminDashboard = () => {
       setError(null);
       
       try {
-        // Fetch all data in parallel
-        const [usersResponse, eventsResponse, merchandiseResponse, ordersResponse] = await Promise.all([
-          axios.get('http://localhost:8080/api/users'),
-          axios.get('http://localhost:8080/api/events'),
-          axios.get('http://localhost:8080/api/merchandises'),
-          axios.get('http://localhost:8080/api/orders')
-        ]);
+        // Fetch data with authentication headers
+        const config = getAuthConfig();
         
-        const usersData = usersResponse.data;
-        const eventsData = eventsResponse.data;
-        const merchandiseData = merchandiseResponse.data;
-        const ordersData = ordersResponse.data;
+        // Use separate try-catch for each request to handle partial failures
+        let usersData = [], eventsData = [], merchandiseData = [], ordersData = [];
         
-        // Update state with fetched data
-        setUsers(usersData);
-        setEvents(eventsData);
-        setMerchandise(merchandiseData);
-        setOrders(ordersData);
+        try {
+          // Try the Azure endpoint first
+          const usersResponse = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/users', config);
+          usersData = usersResponse.data || [];
+          setUsers(usersData);
+        } catch (usersErr) {
+          console.error('Error fetching users from Azure:', usersErr);
+          // Fall back to localhost if Azure fails
+          try {
+            const localResponse = await axios.get('http://localhost:8080/api/users', config);
+            usersData = localResponse.data || [];
+            setUsers(usersData);
+          } catch (localErr) {
+            console.error('Error fetching users from localhost:', localErr);
+            setUsers([]);
+          }
+        }
+        
+        try {
+          const eventsResponse = await axios.get('http://localhost:8080/api/events', config);
+          eventsData = eventsResponse.data || [];
+          setEvents(eventsData);
+        } catch (eventsErr) {
+          console.error('Error fetching events:', eventsErr);
+          setEvents([]);
+        }
+        
+        try {
+          const merchandiseResponse = await axios.get('http://localhost:8080/api/merchandises', config);
+          merchandiseData = merchandiseResponse.data || [];
+          setMerchandise(merchandiseData);
+        } catch (merchErr) {
+          console.error('Error fetching merchandise:', merchErr);
+          setMerchandise([]);
+        }
+        
+        try {
+          const ordersResponse = await axios.get('http://localhost:8080/api/orders', config);
+          ordersData = ordersResponse.data || [];
+          setOrders(ordersData);
+        } catch (ordersErr) {
+          console.error('Error fetching orders:', ordersErr);
+          setOrders([]);
+        }
         
         // Calculate metrics
         const pendingPayments = ordersData.filter(order => 
@@ -79,7 +112,6 @@ const AdminDashboard = () => {
           });
         });
         
-        // Count event participants from orders
         ordersData.forEach(order => {
           if (order.event && eventMap.has(order.event.eventId)) {
             const eventData = eventMap.get(order.event.eventId);
@@ -103,7 +135,6 @@ const AdminDashboard = () => {
           });
         });
         
-        // Count merchandise purchases from orders
         ordersData.forEach(order => {
           if (order.merchandise && merchMap.has(order.merchandise.id)) {
             const merchData = merchMap.get(order.merchandise.id);
@@ -118,14 +149,20 @@ const AdminDashboard = () => {
         setMerchAnalytics(Array.from(merchMap.values()));
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
-        setError('Failed to load dashboard data. Please try again later.');
+        if (err.response && err.response.status === 401) {
+          setError('Authentication required. Please log in.');
+          logoutAdmin();
+          navigate('/adminlogin');
+        } else {
+          setError('Failed to load dashboard data. Please try again later.');
+        }
       } finally {
         setLoading(false);
       }
     };
     
     fetchData();
-  }, []);
+  }, [navigate]);
   
   return (
     <div className="flex h-screen bg-gray-50 text-gray-800">
@@ -173,6 +210,14 @@ const AdminDashboard = () => {
                 </svg>
                 {error}
               </p>
+              {error.includes('Authentication') && (
+                <button 
+                  onClick={() => navigate('/adminlogin')} 
+                  className="mt-2 underline text-blue-600 hover:text-blue-800"
+                >
+                  Go to Login
+                </button>
+              )}
             </div>
           )}
           
@@ -379,8 +424,17 @@ const AdminDashboard = () => {
                   <div className="space-y-3">
                     {users.map((user) => (
                       <div key={user.userId} className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors">
-                        <div className="font-semibold text-white">{user.username}</div>
-                        <div className="text-gray-400 text-sm">{user.email}</div>
+                        <div className="flex justify-between items-center">
+                          <div className="font-semibold text-white flex items-center">
+                            <FaUser className="mr-2 text-yellow-500" />
+                            {user.username}
+                          </div>
+                          <div className="text-xs text-gray-400">{user.role || 'Member'}</div>
+                        </div>
+                        <div className="text-sm text-gray-400 mt-1">
+                          <FaEnvelope className="inline-block mr-1 text-xs" /> 
+                          {user.email}
+                        </div>
                         <div className="flex justify-between mt-2 text-xs">
                           <div>
                             <span className="text-yellow-500">Registered:</span>{' '}
@@ -408,7 +462,6 @@ const AdminDashboard = () => {
         </main>
       </div>
     </div>
-   
   );
 };
 

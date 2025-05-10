@@ -16,12 +16,10 @@ public class Admin {
     @Column(nullable = false)
     private String role;
 
-    @Column(nullable = false) // added a password column
+    @Column(nullable = false)
     private String password;
 
-    @OneToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "user_id")
-    private User userId;
+    // Remove userId field and its getters/setters
 
     public int getAdminId() {
         return admin_id;
@@ -45,14 +43,6 @@ public class Admin {
 
     public void setRole(String role) {
         this.role = role;
-    }
-
-    public User getUserId() {
-        return userId;
-    }
-
-    public void setUserId(User userId) {
-        this.userId = userId;
     }
 
     public String getPassword() {

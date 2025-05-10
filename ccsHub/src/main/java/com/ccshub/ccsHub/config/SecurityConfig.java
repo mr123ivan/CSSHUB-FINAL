@@ -1,34 +1,50 @@
 package com.ccshub.ccsHub.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@Order(2)
 public class SecurityConfig {
 
     private final CustomLogoutHandler logoutHandler;
     private final CustomAuthenticationSuccessHandler successHandler;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(CustomLogoutHandler logoutHandler, CustomAuthenticationSuccessHandler successHandler) {
+    @Autowired
+    private CorsConfigurationSource corsConfigurationSource;
+
+    public SecurityConfig(CustomLogoutHandler logoutHandler, 
+                         CustomAuthenticationSuccessHandler successHandler,
+                         JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.logoutHandler = logoutHandler;
         this.successHandler = successHandler;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .securityMatcher(request -> !request.getRequestURI().startsWith("/api/admins"))
+            .cors(cors -> cors.configurationSource(corsConfigurationSource))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
@@ -38,9 +54,27 @@ public class SecurityConfig {
                     "/js/**",
                     "/images/**",
                     "/favicon.ico",
-                    "/userpage"
+                    "/userpage",
+                    "/api/auth/register",
+                    "/api/auth/login",
+                    "/api/admins/login",
+                    "/api/events",
+                    "/api/events/**",
+                    "/api/merchandises",
+                    "/api/merchandises/**",
+                    "/api/orders/create",
+                    "/api/orders/payment",
+                    "/api/payments/**"
                 ).permitAll()
-                .requestMatchers("/api/users/delete/**").hasAuthority("ROLE_ADMIN")
+                .requestMatchers(
+                    "/api/users/delete/**",
+                    "/api/events/create",
+                    "/api/events/update/**",
+                    "/api/events/delete/**",
+                    "/api/merchandises/create",
+                    "/api/merchandises/update/**",
+                    "/api/merchandises/delete/**"
+                ).hasAnyAuthority("ROLE_ADMIN", "ADMIN")
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().authenticated())
             .oauth2Login(oauth2 -> oauth2
@@ -53,7 +87,10 @@ public class SecurityConfig {
                 ))
             .logout(logout -> logout
                 .logoutUrl("/logout")
-                .addLogoutHandler(logoutHandler));
+                .addLogoutHandler(logoutHandler))
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
@@ -67,34 +104,5 @@ public class SecurityConfig {
         converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
         converter.setPrincipalClaimName("preferred_username");
         return converter;
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(Arrays.asList(
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://127.0.0.1:5173",
-            "http://127.0.0.1:5174",
-            "https://csshub-systeminteg.vercel.app"
-        ));
-        config.setAllowedOriginPatterns(Arrays.asList(
-            "https://*.microsoftonline.com",
-            "https://login.microsoftonline.com"
-        ));
-        config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"));
-        config.addAllowedHeader("*");
-        config.setAllowCredentials(true);
-        config.setExposedHeaders(Arrays.asList(
-            "Authorization",
-            "Content-Type",
-            "Access-Control-Allow-Origin",
-            "Access-Control-Allow-Credentials"
-        ));
-        config.setMaxAge(3600L);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
     }
 }

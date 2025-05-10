@@ -26,7 +26,7 @@ public class UserController {
     public ResponseEntity<User> syncAzureUser(@AuthenticationPrincipal Jwt jwt) {
         String email = jwt.getClaimAsString("preferred_username");
         if (email == null) {
-            email = jwt.getClaimAsString("email"); // fallback
+            email = jwt.getClaimAsString("email"); // Fallback
         }
 
         String username = jwt.getClaimAsString("given_name") + " " + jwt.getClaimAsString("family_name");
@@ -65,11 +65,14 @@ public class UserController {
         }
 
         String email = jwt.getClaimAsString("preferred_username");
-        User currentUser = userRepo.findByEmail(email);
-        Admin admin = adminRepo.findByUserId(currentUser.getUserId());
+        if (email == null) {
+            email = jwt.getClaimAsString("email"); // Fallback
+        }
 
+        // Find admin by username (assuming username is the email from JWT)
+        Admin admin = adminRepo.findByUsername(email);
         if (admin == null || !"ADMIN".equals(admin.getRole())) {
-            return ResponseEntity.status(403).build();
+            return ResponseEntity.status(403).build(); // Forbidden if not admin
         }
 
         userRepo.deleteUser(id);
