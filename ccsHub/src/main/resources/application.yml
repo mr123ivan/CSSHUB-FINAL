@@ -32,7 +32,7 @@ spring:
             client-id: 67761468-57d5-41a3-9b4f-1f69101be135
             client-secret: JDb8Q~9YR51YTnNtJNDz6Y3nhX2CIHHnyjmqdbvf
             authorization-grant-type: authorization_code
-            redirect-uri: "http://localhost:8080/login/oauth2/code/azure-dev"
+            redirect-uri: "https://ccshub-systeminteg.azurewebsites.net/login/oauth2/code/azure-dev"
             scope:
               - openid
               - email
@@ -53,7 +53,7 @@ jwt:
   expiration: 86400000  # 24 hours in milliseconds
 
 server:
-  port: 8080
-  address: localhost
+  port: 80
+  address: 0.0.0.0
   error:
     include-stacktrace: never

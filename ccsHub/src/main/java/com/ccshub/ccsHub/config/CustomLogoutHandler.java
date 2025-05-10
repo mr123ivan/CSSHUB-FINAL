@@ -1,3 +1,4 @@
+// CustomLogoutHandler.java
 package com.ccshub.ccsHub.config;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,7 +34,7 @@ public class CustomLogoutHandler extends SecurityContextLogoutHandler {
 
         String postLogoutRedirectUri = request.getServerName().contains("localhost")
                 ? "http://localhost:5173"
-                : "https://csshub-systeminteg.vercel.app";
+                : "https://csshub-final.vercel.app";
 
         String logoutUri = UriComponentsBuilder
                 .fromHttpUrl(logoutEndpoint)

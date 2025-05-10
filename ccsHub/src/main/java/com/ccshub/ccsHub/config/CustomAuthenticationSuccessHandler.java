@@ -1,3 +1,4 @@
+// CustomAuthenticationSuccessHandler.java
 package com.ccshub.ccsHub.config;
 
 import com.ccshub.ccsHub.entity.User;
@@ -40,34 +41,33 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         OidcUser oidcUser = (OidcUser) oauthToken.getPrincipal();
 
-        String username = oidcUser.getName(); // Using 'name' as per user-name-attribute
+        String username = oidcUser.getName();
         String email = oidcUser.getEmail();
         logger.info("OidcUser claims: {}", oidcUser.getClaims());
 
         if (email == null || email.isBlank()) {
-            logger.warn("Email is null or blank, attempting to use preferred_username: {}", oidcUser.getPreferredUsername());
+            logger.warn("Email is null or blank, attempting fallback strategies.");
             email = oidcUser.getPreferredUsername();
             if (email == null || email.isBlank()) {
                 Object upnClaim = oidcUser.getClaim("upn");
-logger.warn("Preferred_username is null or blank, attempting to use upn: {}", upnClaim);
-
+                logger.warn("Preferred_username is null or blank, attempting to use upn: {}", upnClaim);
                 email = oidcUser.getClaim("upn");
                 if (email == null || email.isBlank()) {
-                    logger.error("No valid email, preferred_username, or upn found, using fallback email");
+                    logger.error("No valid email found, using fallback.");
                     email = "fallback@" + oauthToken.getName().replaceAll("[^a-zA-Z0-9]", "") + ".com";
                 }
             }
         }
 
         OAuth2AuthorizedClient authorizedClient = authorizedClientService.loadAuthorizedClient(
-            oauthToken.getAuthorizedClientRegistrationId(), oauthToken.getName());
+                oauthToken.getAuthorizedClientRegistrationId(), oauthToken.getName());
         String accessToken = authorizedClient != null ? authorizedClient.getAccessToken().getTokenValue() : null;
 
         logger.info("OAuth2 Client: {}", authorizedClient);
         logger.info("Extracted access token: {}", accessToken);
 
         if (accessToken == null) {
-            logger.error("Access token is null, authentication might have failed or token not issued.");
+            logger.error("Access token is null, cannot continue.");
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Authentication failed: No access token issued.");
             return;
         }
@@ -83,7 +83,7 @@ logger.warn("Preferred_username is null or blank, attempting to use upn: {}", up
 
         String redirectUrl = (request.getServerName().contains("localhost"))
                 ? "http://localhost:5173/userpage?token=" + accessToken
-                : "https://csshub-systeminteg.vercel.app/userpage?token=" + accessToken;
+                : "https://csshub-final.vercel.app/userpage?token=" + accessToken;
         logger.info("Redirecting to: {}", redirectUrl);
         response.sendRedirect(redirectUrl);
     }
