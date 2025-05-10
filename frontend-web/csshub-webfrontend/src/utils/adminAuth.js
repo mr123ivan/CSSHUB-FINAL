@@ -96,13 +96,13 @@ export const deleteEvent = async (eventId) => {
       // Fall back to localhost patterns
       try {
         // Try direct pattern first (matches user deletion pattern)
-        return await axios.delete(`http://localhost:8080/api/events/${eventId}`, config);
+        return await axios.delete(`https://ccshub-systeminteg.azurewebsites.net/api/events/${eventId}`, config);
       } catch (localDirectError) {
         console.log('Trying alternate localhost endpoint pattern...');
         
         // Last attempt: With /delete/ in the path
         try {
-          return await axios.delete(`http://localhost:8080/api/events/delete/${eventId}`, config);
+          return await axios.delete(`https://ccshub-systeminteg.azurewebsites.net/api/events/delete/${eventId}`, config);
         } catch (localError) {
           console.error('All deletion attempts failed:', localError);
           throw localError; // Re-throw the final error for the caller to handle
@@ -137,13 +137,13 @@ export const deleteMerchandise = async (itemId) => {
       // Fall back to localhost patterns
       try {
         // Try direct pattern first (matches user deletion pattern)
-        return await axios.delete(`http://localhost:8080/api/merchandises/${itemId}`, config);
+        return await axios.delete(`https://ccshub-systeminteg.azurewebsites.net/api/merchandises/${itemId}`, config);
       } catch (localDirectError) {
         console.log('Trying alternate localhost endpoint pattern...');
         
         // Last attempt: With /delete/ in the path
         try {
-          return await axios.delete(`http://localhost:8080/api/merchandises/delete/${itemId}`, config);
+          return await axios.delete(`https://ccshub-systeminteg.azurewebsites.net/api/merchandises/delete/${itemId}`, config);
         } catch (localError) {
           console.error('All deletion attempts failed:', localError);
           throw localError; // Re-throw the final error for the caller to handle
@@ -169,7 +169,7 @@ export const addMerchandise = async (merchandiseData) => {
       }
     };
     
-    return await axios.post('http://localhost:8080/api/merchandises/create', merchandiseData, config);
+    return await axios.post('https://ccshub-systeminteg.azurewebsites.net/api/merchandises/create', merchandiseData, config);
   } catch (error) {
     console.error('Error in addMerchandise:', error);
     throw error;

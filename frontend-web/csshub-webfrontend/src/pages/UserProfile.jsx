@@ -63,7 +63,7 @@ const UserProfile = () => {
         
         // Fall back to localhost if Azure fails
         try {
-          const localResponse = await axios.get('http://localhost:8080/api/users/current', config);
+          const localResponse = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/users/current', config);
           
           if (localResponse.data) {
             setUserProfile(localResponse.data);
@@ -170,7 +170,7 @@ const UserProfile = () => {
           
           // Fall back to localhost
           try {
-            const localResponse = await axios.put(`http://localhost:8080/api/users/${userProfile.id}`, editedProfile, config);
+            const localResponse = await axios.put(`https://ccshub-systeminteg.azurewebsites.net/api/users/${userProfile.id}`, editedProfile, config);
             
             if (localResponse.data) {
               setUserProfile(localResponse.data);

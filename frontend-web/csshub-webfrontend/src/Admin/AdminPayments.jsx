@@ -57,7 +57,7 @@ const AdminPayments = () => {
     
     try {
       // Fetch orders directly - no need for special admin endpoints due to security config updates
-      const response = await axios.get('http://localhost:8080/api/orders', getAuthConfig());
+      const response = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/orders', getAuthConfig());
       
       if (response.data && response.data.length > 0) {
         // Transform orders into payment records
@@ -69,7 +69,7 @@ const AdminPayments = () => {
           amount: order.totalAmount,
           paymentMethod: 'Gcash', // Assumption based on the system
           status: order.paymentStatus,
-          receiptUrl: `http://localhost:8080/api/orders/receipt/${order.orderId}`
+          receiptUrl: `https://ccshub-systeminteg.azurewebsites.net/api/orders/receipt/${order.orderId}`
         }));
         
         setPayments(paymentRecords);
@@ -97,7 +97,7 @@ const AdminPayments = () => {
     }
     
     // This endpoint comes from the order processing system we implemented previously
-    return `http://localhost:8080/api/orders/receipt-image/${payment.orderId}?time=${new Date().getTime()}`;
+    return `https://ccshub-systeminteg.azurewebsites.net/api/orders/receipt-image/${payment.orderId}?time=${new Date().getTime()}`;
   };
 
   const closeModal = () => {
@@ -112,10 +112,10 @@ const AdminPayments = () => {
       // Use admin-friendly endpoint for order updates
       const getReceiptImageUrl = (payment) => {
         // Use the orders receipt endpoint from the order processing system
-        return `http://localhost:8080/api/orders/receipt-image/${payment.orderId || payment.id}`;
+        return `https://ccshub-systeminteg.azurewebsites.net/api/orders/receipt-image/${payment.orderId || payment.id}`;
       };
       
-      const response = await axios.put(`http://localhost:8080/api/orders/edit/${paymentId}`, 
+      const response = await axios.put(`https://ccshub-systeminteg.azurewebsites.net/api/orders/edit/${paymentId}`, 
         { paymentStatus: newStatus },
         getAuthConfig()
       );

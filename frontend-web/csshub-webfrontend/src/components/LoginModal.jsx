@@ -31,7 +31,7 @@ export default function LoginModal({ open, handleClose }) {
 
   const handleLoginRedirect = () => {
     window.location.href = process.env.NODE_ENV === 'development'
-      ? 'http://localhost:8080/login/oauth2/authorization/azure-dev'
+      ? 'https://ccshub-systeminteg.azurewebsites.net/login/oauth2/authorization/azure-dev'
       : 'https://ccshub-systeminteg.azurewebsites.net/login/oauth2/authorization/azure-dev';
   };
   

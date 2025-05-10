@@ -53,7 +53,7 @@ const AdminDashboard = () => {
           console.error('Error fetching users from Azure:', usersErr);
           // Fall back to localhost if Azure fails
           try {
-            const localResponse = await axios.get('http://localhost:8080/api/users', config);
+            const localResponse = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/users', config);
             usersData = localResponse.data || [];
             setUsers(usersData);
           } catch (localErr) {
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
         }
         
         try {
-          const eventsResponse = await axios.get('http://localhost:8080/api/events', config);
+          const eventsResponse = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/events', config);
           eventsData = eventsResponse.data || [];
           setEvents(eventsData);
         } catch (eventsErr) {
@@ -72,7 +72,7 @@ const AdminDashboard = () => {
         }
         
         try {
-          const merchandiseResponse = await axios.get('http://localhost:8080/api/merchandises', config);
+          const merchandiseResponse = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/merchandises', config);
           merchandiseData = merchandiseResponse.data || [];
           setMerchandise(merchandiseData);
         } catch (merchErr) {
@@ -81,7 +81,7 @@ const AdminDashboard = () => {
         }
         
         try {
-          const ordersResponse = await axios.get('http://localhost:8080/api/orders', config);
+          const ordersResponse = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/orders', config);
           ordersData = ordersResponse.data || [];
           setOrders(ordersData);
         } catch (ordersErr) {

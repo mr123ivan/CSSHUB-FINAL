@@ -98,7 +98,7 @@ const AdminOrders = () => {
       
       // Fall back to localhost if Azure fails
       try {
-        const localResponse = await axios.get('http://localhost:8080/api/orders', config);
+        const localResponse = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/orders', config);
         
         if (Array.isArray(localResponse.data) && localResponse.data.length > 0) {
           const formattedOrders = localResponse.data.map(order => ({
@@ -144,7 +144,7 @@ const AdminOrders = () => {
     try {
       const updateData = { orderStatus: status };
       try {
-        await axios.put(`http://localhost:8080/api/orders/edit/${orderId}`, updateData, getAuthConfig());
+        await axios.put(`https://ccshub-systeminteg.azurewebsites.net/api/orders/edit/${orderId}`, updateData, getAuthConfig());
         alert('Order status updated successfully on server');
       } catch (apiError) {
         console.error('Server update failed, updating UI only:', apiError);
@@ -176,7 +176,7 @@ const AdminOrders = () => {
     try {
       const updateData = { paymentStatus: status };
       try {
-        await axios.put(`http://localhost:8080/api/orders/edit/${orderId}`, updateData, getAuthConfig());
+        await axios.put(`https://ccshub-systeminteg.azurewebsites.net/api/orders/edit/${orderId}`, updateData, getAuthConfig());
         alert('Payment status updated successfully on server');
       } catch (apiError) {
         console.error('Server update failed, updating UI only:', apiError);
@@ -214,7 +214,7 @@ const AdminOrders = () => {
       return 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22600%22%20height%3D%22400%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20fill%3D%22%23333%22%20width%3D%22600%22%20height%3D%22400%22%2F%3E%3Ctext%20fill%3D%22%23FFCC00%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2236%22%20text-anchor%3D%22middle%22%20x%3D%22300%22%20y%3D%22200%22%3ENo%20Receipt%3C%2Ftext%3E%3C%2Fsvg%3E';
     }
     
-    return `http://localhost:8080/api/orders/receipt-image/${order.orderId}?time=${new Date().getTime()}`;
+    return `https://ccshub-systeminteg.azurewebsites.net/api/orders/receipt-image/${order.orderId}?time=${new Date().getTime()}`;
   };
 
   const closeModal = () => {

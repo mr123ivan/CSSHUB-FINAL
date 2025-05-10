@@ -124,7 +124,7 @@ const MerchPage = () => {
                   >
                     <div className="h-48 overflow-hidden relative">
                       <img
-                        src={`http://localhost:8080/api/merchandises/image/${item.id}`}
+                        src={`https://ccshub-systeminteg.azurewebsites.net/api/merchandises/image/${item.id}`}
                         alt={item.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {

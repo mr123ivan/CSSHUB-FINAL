@@ -112,7 +112,7 @@ export const AuthProvider = ({ children }) => {
     // Only redirect to backend logout for Azure auth
     if (authSource === 'azure') {
       window.location.href = process.env.NODE_ENV === 'development'
-        ? 'http://localhost:8080/logout'
+        ? 'https://ccshub-systeminteg.azurewebsites.net/logout'
         : 'https://ccshub-systeminteg.azurewebsites.net/logout';
     }
   };
