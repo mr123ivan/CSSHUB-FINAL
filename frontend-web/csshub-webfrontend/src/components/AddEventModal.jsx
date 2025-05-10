@@ -59,7 +59,7 @@ const AddEventModal = ({ isOpen, onClose, onSuccess }) => {
         data.append('imageFile', formData.image);
       }
 
-      const response = await axios.post('http://localhost:8080/api/events/create', data, {
+      const response = await axios.post('https://ccshub-systeminteg.azurewebsites.net/api/events/create', data, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },

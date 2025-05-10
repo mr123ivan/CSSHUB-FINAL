@@ -6,7 +6,7 @@ import axios from 'axios';
 
 // Set up axios with base URL and CORS credentials
 const api = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: 'https://ccshub-systeminteg.azurewebsites.net',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

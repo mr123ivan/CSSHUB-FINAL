@@ -29,7 +29,7 @@ import { FaCalendarAlt, FaMapMarkerAlt, FaClock, FaSpinner, FaSearch } from 'rea
         } catch (azureError) {
           console.error('Error fetching from Azure:', azureError);
           // Fall back to localhost
-          const localResponse = await axios.get('http://localhost:8080/api/events');
+          const localResponse = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/events');
           setEvents(localResponse.data);
         }
       } catch (error) {
@@ -142,7 +142,7 @@ import { FaCalendarAlt, FaMapMarkerAlt, FaClock, FaSpinner, FaSearch } from 'rea
                       <div className="flex flex-col md:flex-row">
                         <div className="md:w-1/3 h-48 md:h-auto relative overflow-hidden">
                           <img
-                            src={`http://localhost:8080/api/events/image/${event.eventId}`}
+                            src={`https://ccshub-systeminteg.azurewebsites.net/api/events/image/${event.eventId}`}
                             alt={event.title}
                             className="w-full h-full object-cover"
                             onError={(e) => {

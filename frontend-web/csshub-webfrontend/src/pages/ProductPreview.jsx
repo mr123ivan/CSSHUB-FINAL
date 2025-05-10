@@ -39,8 +39,8 @@ const ProductPreview = () => {
                   <img
                     src={
                       isMerch
-                        ? `http://localhost:8080/api/merchandises/image/${merch.id}`
-                        : `http://localhost:8080/api/events/image/${event.eventId}`
+                        ? `https://ccshub-systeminteg.azurewebsites.net/api/merchandises/image/${merch.id}`
+                        : `https://ccshub-systeminteg.azurewebsites.net/api/events/image/${event.eventId}`
                     }
                     alt={item.title || item.name}
                     className="w-full h-auto object-cover"

@@ -102,15 +102,15 @@ const UserOrders = () => {
       const endpointPatterns = [
         // Try both Azure and localhost for each pattern
         { base: 'https://ccshub-systeminteg.azurewebsites.net', endpoint: '/api/orders/user' },
-        { base: 'http://localhost:8080', endpoint: '/api/orders/user' },
+        { base: 'https://ccshub-systeminteg.azurewebsites.net', endpoint: '/api/orders/user' },
         { base: 'https://ccshub-systeminteg.azurewebsites.net', endpoint: '/api/users/orders' },
-        { base: 'http://localhost:8080', endpoint: '/api/users/orders' },
+        { base: 'https://ccshub-systeminteg.azurewebsites.net', endpoint: '/api/users/orders' },
         // If we have a userId, try endpoints with it
         ...(userId ? [
           { base: 'https://ccshub-systeminteg.azurewebsites.net', endpoint: `/api/users/${userId}/orders` },
-          { base: 'http://localhost:8080', endpoint: `/api/users/${userId}/orders` },
+          { base: 'https://ccshub-systeminteg.azurewebsites.net', endpoint: `/api/users/${userId}/orders` },
           { base: 'https://ccshub-systeminteg.azurewebsites.net', endpoint: `/api/orders/user/${userId}` },
-          { base: 'http://localhost:8080', endpoint: `/api/orders/user/${userId}` }
+          { base: 'https://ccshub-systeminteg.azurewebsites.net', endpoint: `/api/orders/user/${userId}` }
         ] : [])
       ];
       
@@ -297,7 +297,7 @@ const UserOrders = () => {
         
         // Fall back to localhost
         try {
-          const localResponse = await axios.get(`http://localhost:8080/api/orders/${orderId}/receipt`, config);
+          const localResponse = await axios.get(`https://ccshub-systeminteg.azurewebsites.net/api/orders/${orderId}/receipt`, config);
           
           const imageBlob = new Blob([localResponse.data], { type: 'image/jpeg' });
           const imageUrl = URL.createObjectURL(imageBlob);
@@ -350,7 +350,7 @@ const UserOrders = () => {
         
         // Fall back to localhost
         try {
-          const localResponse = await axios.get(`http://localhost:8080/api/orders/${orderId}/receipt`, config);
+          const localResponse = await axios.get(`https://ccshub-systeminteg.azurewebsites.net/api/orders/${orderId}/receipt`, config);
           
           const imageBlob = new Blob([localResponse.data], { type: 'image/jpeg' });
           const imageUrl = URL.createObjectURL(imageBlob);

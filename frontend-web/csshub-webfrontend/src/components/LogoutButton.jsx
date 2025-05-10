@@ -7,7 +7,7 @@ function LogoutButton() {
     localStorage.removeItem('access_token');
     navigate('/');
     window.location.href = process.env.NODE_ENV === 'development'
-      ? 'http://localhost:8080/logout'
+      ? 'https://ccshub-systeminteg.azurewebsites.net/logout'
       : 'https://ccshub-systeminteg.azurewebsites.net/logout';
   };
 

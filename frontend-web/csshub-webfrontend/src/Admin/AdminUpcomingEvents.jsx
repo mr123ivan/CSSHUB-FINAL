@@ -25,7 +25,7 @@ const AdminUpcomingEvents = () => {
     
     try {
       // Use auth config from our utility
-      const response = await axios.get('http://localhost:8080/api/events', getAuthConfig());
+      const response = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/events', getAuthConfig());
       
       if (response.data && response.data.length > 0) {
         setEventsList(response.data);
@@ -85,7 +85,7 @@ const AdminUpcomingEvents = () => {
   // Generate a placeholder image for events
   const getEventImageUrl = (event) => {
     // First try to get the image from the server
-    const serverUrl = `http://localhost:8080/api/events/image/${event.eventId}`;
+    const serverUrl = `https://ccshub-systeminteg.azurewebsites.net/api/events/image/${event.eventId}`;
     
     // Format the event date for display
     const eventDate = event.eventDate ? new Date(event.eventDate) : new Date();
