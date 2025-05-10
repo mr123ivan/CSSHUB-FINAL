@@ -25,7 +25,7 @@ const AdminMerch = () => {
     
     try {
       // Use auth config from our utility
-      const response = await axios.get('http://localhost:8080/api/merchandises', getAuthConfig());
+      const response = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/merchandises', getAuthConfig());
       
       if (response.data && response.data.length > 0) {
         setMerchList(response.data);
@@ -85,7 +85,7 @@ const AdminMerch = () => {
   // Generate a placeholder image for merchandise
   const getMerchandiseImageUrl = (item) => {
     // First try to get the image from the server
-    const serverUrl = `http://localhost:8080/api/merchandises/image/${item.id}`;
+    const serverUrl = `https://ccshub-systeminteg.azurewebsites.net/api/merchandises/image/${item.id}`;
     
     // Also prepare a fallback SVG with the item name
     const encodedName = encodeURIComponent(item.name || 'CSS Merch');

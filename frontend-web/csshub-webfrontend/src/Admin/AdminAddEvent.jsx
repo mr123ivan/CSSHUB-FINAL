@@ -21,7 +21,7 @@ const AdminAddEvent = () => {
     if (image) formData.append('imageFile', image); // Append image if available
 
     try {
-      const res = await axios.post('http://localhost:8080/api/events/create', formData, {
+      const res = await axios.post('https://ccshub-systeminteg.azurewebsites.net/api/events/create', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

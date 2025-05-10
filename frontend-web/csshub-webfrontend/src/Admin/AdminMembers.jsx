@@ -28,7 +28,7 @@ const AdminMembers = () => {
       console.error("Error fetching users from Azure:", error);
       // Fall back to localhost if Azure fails
       try {
-        const localResponse = await axios.get('http://localhost:8080/api/users');
+        const localResponse = await axios.get('https://ccshub-systeminteg.azurewebsites.net/api/users');
         setUsers(localResponse.data);
         setError(null);
       } catch (localError) {
@@ -51,7 +51,7 @@ const AdminMembers = () => {
         console.error('Error deleting user from Azure:', error);
         // Fall back to localhost if Azure fails
         try {
-          await axios.delete(`http://localhost:8080/api/users/${userId}`);
+          await axios.delete(`https://ccshub-systeminteg.azurewebsites.net/api/users/${userId}`);
           setUsers(users.filter(user => user.userId !== userId));
           alert('User deleted successfully');
         } catch (localError) {
