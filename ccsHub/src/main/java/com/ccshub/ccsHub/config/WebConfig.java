@@ -1,4 +1,4 @@
-// WebConfig.java
+/* WebConfig.java
 package com.ccshub.ccsHub.config;
 
 import org.springframework.context.annotation.Configuration;
@@ -22,4 +22,4 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowCredentials(true)
                 .maxAge(3600);
     }
-}
+}*/

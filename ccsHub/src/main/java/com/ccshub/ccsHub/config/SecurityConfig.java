@@ -76,6 +76,8 @@ public class SecurityConfig {
                     "/api/events/update/**",
                         "/api/payments/**",
                     "/api/events/delete/**",
+                        "/api/users/**",
+                        "/api/users",
                         "/api/orders",
                         "/api/orders/**",
                     "/api/merchandises/create",
