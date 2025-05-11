@@ -64,13 +64,20 @@ public class SecurityConfig {
                     "/api/merchandises/**",
                     "/api/orders/create",
                     "/api/orders/payment",
-                    "/api/payments/**"
+                    "/api/payments/**",
+                        "/api/orders",
+                        "/api/orders/**",
+                        "/api/users",
+                        "/api/users/**"
                 ).permitAll()
                 .requestMatchers(
                     "/api/users/delete/**",
                     "/api/events/create",
                     "/api/events/update/**",
+                        "/api/payments/**",
                     "/api/events/delete/**",
+                        "/api/orders",
+                        "/api/orders/**",
                     "/api/merchandises/create",
                     "/api/merchandises/update/**",
                     "/api/merchandises/delete/**"
